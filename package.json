@@ -57,7 +57,8 @@
     "test": "jest"
   },
   "op-sqlite": {
-    "sqlcipher": true
+    "sqlcipher": true,
+    "fts5": true
   },
   "private": true
 }
