@@ -11,7 +11,7 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#f6f6f9"
+      "backgroundColor": "#fdf4ed"
     },
     "assetBundlePatterns": [
       "**/*"
@@ -22,16 +22,12 @@
     "android": {
       "package": "com.jotji.app",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#fdf4ed"
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
-        "android.permission.USE_BIOMETRIC",
-        "android.permission.USE_FINGERPRINT",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.USE_BIOMETRIC"
       ]
     },
     "web": {
