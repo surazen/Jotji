@@ -42,7 +42,8 @@
           "photosPermission": "Jotji needs access to your photos to attach images to your notes.",
           "cameraPermission": "Jotji needs camera access to attach photos to your notes."
         }
-      ]
+      ],
+      "expo-sharing"
     ],
     "extra": {
       "eas": {

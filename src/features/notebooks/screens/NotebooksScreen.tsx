@@ -139,6 +139,6 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   addBtn: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  list: { paddingHorizontal: 18, paddingBottom: 40 },
+  list: { paddingHorizontal: 18, paddingBottom: 110 },
   cell: { flex: 1, padding: 6 },
 });

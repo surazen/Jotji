@@ -7,14 +7,16 @@ import { useTheme } from '@core/theme/useTheme';
 type Props = {
   onCamera: () => void;
   onGallery: () => void;
+  onAttachFile: () => void;
   onTag: () => void;
 };
 
-/** Horizontal action row in the editor: Camera, Gallery, Tag. */
-export function AttachmentBar({ onCamera, onGallery, onTag }: Props) {
+/** Horizontal action row in the editor: Camera, Gallery, File, Tag. */
+export function AttachmentBar({ onCamera, onGallery, onAttachFile, onTag }: Props) {
   const items: { icon: IconName; label: string; onPress: () => void }[] = [
     { icon: 'camera', label: 'Camera', onPress: onCamera },
     { icon: 'image', label: 'Gallery', onPress: onGallery },
+    { icon: 'paperclip', label: 'File', onPress: onAttachFile },
     { icon: 'hash', label: 'Tag', onPress: onTag },
   ];
   return (

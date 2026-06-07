@@ -40,7 +40,7 @@ import { AttachmentBar } from '../components/AttachmentBar';
 import { AttachmentStrip } from '../components/AttachmentStrip';
 import { buildEditorCss, buildEditorTheme, injectEditorCss } from '../components/editorTheme';
 import { RichTextEditor } from '../components/RichTextEditor';
-import { pickFromCamera, pickFromGallery } from '../utils/pickImage';
+import { pickDocumentFile, pickFromCamera, pickFromGallery } from '../utils/pickImage';
 import { shareNoteText } from '../utils/shareNote';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'NoteEditor'>;
@@ -250,6 +250,21 @@ function EditorBody({
     }
   };
 
+  const addFile = async () => {
+    try {
+      const picked = await pickDocumentFile();
+      if (!picked) return;
+      const created = await attachmentsRepo.addAttachment({
+        noteId,
+        sourceUri: picked.uri,
+        mime: picked.mime,
+      });
+      setAttachments((prev) => [...prev, created]);
+    } catch {
+      toast.error('Could not attach file');
+    }
+  };
+
   const removeAttachment = async (id: string) => {
     await attachmentsRepo.deleteAttachment(id);
     setAttachments((prev) => prev.filter((a) => a.id !== id));
@@ -323,6 +338,7 @@ function EditorBody({
           <AttachmentBar
             onCamera={() => addImage('camera')}
             onGallery={() => addImage('gallery')}
+            onAttachFile={addFile}
             onTag={() => setTagSheetOpen(true)}
           />
           {tags.length > 0 ? (

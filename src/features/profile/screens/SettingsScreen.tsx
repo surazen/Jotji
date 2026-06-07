@@ -7,6 +7,8 @@ import { StackHeader } from '@core/components/StackHeader';
 import { AppText } from '@core/components/Text';
 import { toast } from '@core/components/Toast';
 import { canUseAppLock, authenticate } from '@core/security/appLock';
+import { useNotesStore } from '@features/notes/store/notesStore';
+import { pickAndImport } from '@features/notes/utils/importNotes';
 import {
   FONT_FAMILY_LABELS,
   FONT_SCALE_LABELS,
@@ -49,6 +51,19 @@ export function SettingsScreen() {
   } = useSettingsStore();
 
   const [sheet, setSheet] = useState<Sheet>(null);
+
+  const onImport = async () => {
+    try {
+      const result = await pickAndImport();
+      if (!result) return;
+      await useNotesStore.getState().reload();
+      toast.success(
+        result.imported === 1 ? 'Imported 1 note' : `Imported ${result.imported} notes`,
+      );
+    } catch {
+      toast.error('Could not import that file');
+    }
+  };
 
   const onToggleAppLock = async (next: boolean) => {
     if (!next) {
@@ -103,6 +118,13 @@ export function SettingsScreen() {
             passcode prompt when you open Jotji.
           </AppText>
         </Section>
+
+        <Section title="Notes & data">
+          <SettingsRow icon="download" label="Import notes" onPress={onImport} />
+          <AppText variant="bodySm" color="onSurfaceVariant" style={styles.note}>
+            Import from an Evernote export (.enex) or a Markdown / text file.
+          </AppText>
+        </Section>
       </ScrollView>
 
       <SelectSheet
@@ -145,7 +167,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 const styles = StyleSheet.create({
-  content: { width: '100%', alignSelf: 'center', paddingHorizontal: 24, paddingBottom: 40 },
+  content: { width: '100%', alignSelf: 'center', paddingHorizontal: 24, paddingBottom: 110 },
   section: { marginTop: 20 },
   sectionTitle: { marginBottom: 10, marginLeft: 4 },
   note: { marginTop: 4, marginHorizontal: 4 },

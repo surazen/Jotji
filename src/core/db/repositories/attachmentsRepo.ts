@@ -1,5 +1,5 @@
 /** Attachment data access + sandbox file lifecycle. Static SQL + bound params. */
-import { deleteSandboxFile, persistImageToSandbox } from '../../utils/files';
+import { deleteSandboxFile, persistImageToSandbox, persistToSandbox } from '../../utils/files';
 import { newId, nowMs } from '../../utils/ids';
 import { all, first, run } from '../database';
 import type { Attachment } from '../types';
@@ -36,7 +36,7 @@ export async function listAttachments(noteId: string): Promise<Attachment[]> {
   return rows.map(mapAttachment);
 }
 
-export type AddImageInput = {
+export type AddAttachmentInput = {
   noteId: string;
   sourceUri: string;
   mime: string;
@@ -44,7 +44,31 @@ export type AddImageInput = {
   height?: number | null;
 };
 
-/** Copy a picked image into the sandbox and record it against a note. */
+/** Copy any picked media/file into the sandbox and record it against a note. */
+export async function addAttachment(input: AddAttachmentInput): Promise<Attachment> {
+  const id = newId();
+  const ts = nowMs();
+  const { uri, size } = persistToSandbox(input.sourceUri, id, input.mime);
+  await run(
+    `INSERT INTO attachments (id, note_id, local_uri, mime, width, height, size, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, input.noteId, uri, input.mime, input.width ?? null, input.height ?? null, size, ts],
+  );
+  return {
+    id,
+    noteId: input.noteId,
+    localUri: uri,
+    mime: input.mime,
+    width: input.width ?? null,
+    height: input.height ?? null,
+    size,
+    createdAt: ts,
+  };
+}
+
+export type AddImageInput = AddAttachmentInput;
+
+/** Image-validated variant (rejects non-images). */
 export async function addImageAttachment(input: AddImageInput): Promise<Attachment> {
   const id = newId();
   const ts = nowMs();

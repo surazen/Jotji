@@ -93,7 +93,7 @@ export function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  content: { width: '100%', alignSelf: 'center', paddingHorizontal: 24, paddingBottom: 40 },
+  content: { width: '100%', alignSelf: 'center', paddingHorizontal: 24, paddingBottom: 110 },
   title: { marginTop: 8, marginBottom: 16 },
   rows: { marginTop: 24 },
   footer: { textAlign: 'center', marginTop: 24 },

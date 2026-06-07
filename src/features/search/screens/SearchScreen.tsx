@@ -120,9 +120,9 @@ export function SearchScreen() {
 const styles = StyleSheet.create({
   content: { flex: 1, width: '100%', alignSelf: 'center', paddingHorizontal: 24 },
   searchWrap: { paddingTop: 8, paddingBottom: 12 },
-  idle: { gap: 16, paddingTop: 8, paddingBottom: 40 },
+  idle: { gap: 16, paddingTop: 8, paddingBottom: 110 },
   heading: { marginBottom: 4 },
   hint: { marginTop: 4 },
-  results: { paddingTop: 4, paddingBottom: 40 },
+  results: { paddingTop: 4, paddingBottom: 110 },
   resultsLabel: { marginBottom: 12 },
 });

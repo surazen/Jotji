@@ -1,9 +1,11 @@
 import React from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 
 import { Icon, type IconName } from '@core/components/Icon';
 import { useTheme } from '@core/theme/useTheme';
@@ -31,6 +33,7 @@ const TAB_ICONS: Record<keyof AppTabParamList, IconName> = {
 
 export function AppTabNavigator() {
   const theme = useTheme();
+  const insets = useSafeAreaInsets();
   const rootNav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   return (
@@ -40,11 +43,28 @@ export function AppTabNavigator() {
         tabBarActiveTintColor: theme.colors.primary,
         tabBarInactiveTintColor: theme.colors.onSurfaceVariant,
         tabBarShowLabel: false,
+        // Glass navigation (DESIGN.md): translucent + blurred, floating over content.
+        tabBarBackground: () => (
+          <View style={StyleSheet.absoluteFill}>
+            <BlurView
+              intensity={24}
+              tint={theme.dark ? 'dark' : 'light'}
+              style={StyleSheet.absoluteFill}
+            />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: theme.colors.glass }]} />
+          </View>
+        ),
         tabBarStyle: {
-          backgroundColor: theme.colors.surfaceContainerLow,
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'transparent',
           borderTopWidth: 0,
-          height: 64,
+          elevation: 0,
+          height: 60 + insets.bottom,
           paddingTop: 8,
+          paddingBottom: insets.bottom,
         },
         tabBarIcon: ({ color, focused }) => {
           const name = TAB_ICONS[route.name as keyof AppTabParamList];
