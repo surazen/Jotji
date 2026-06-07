@@ -2,6 +2,8 @@ import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { RichText, type EditorBridge } from '@10play/tentap-editor';
 
+import { useTheme } from '@core/theme/useTheme';
+
 type Props = {
   editor: EditorBridge;
 };
@@ -13,8 +15,9 @@ type Props = {
  * Toolbar is rendered by the editor screen so it can sit above the keyboard.
  */
 export function RichTextEditor({ editor }: Props) {
+  const theme = useTheme();
   return (
-    <View style={styles.flex}>
+    <View style={[styles.flex, { backgroundColor: theme.colors.surface }]}>
       <RichText editor={editor} />
     </View>
   );

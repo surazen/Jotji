@@ -1,5 +1,5 @@
-import React, { type ReactNode } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import React, { useEffect, useState, type ReactNode } from 'react';
+import { Keyboard, Modal, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -17,10 +17,25 @@ type BottomSheetProps = {
 /**
  * Lightweight gesture-free bottom sheet: a slide-up panel over a tappable
  * scrim. Tonal layering (surfaceContainerLow) defines the panel — no borders.
+ * The panel lifts above the keyboard (Android Modals don't auto-resize).
  */
 export function BottomSheet({ visible, onClose, title, children }: BottomSheetProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    if (!visible) return;
+    const show = Keyboard.addListener('keyboardDidShow', (e) =>
+      setKeyboardHeight(e.endCoordinates.height),
+    );
+    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardHeight(0));
+    return () => {
+      show.remove();
+      hide.remove();
+      setKeyboardHeight(0);
+    };
+  }, [visible]);
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
@@ -33,7 +48,7 @@ export function BottomSheet({ visible, onClose, title, children }: BottomSheetPr
             styles.panel,
             {
               backgroundColor: theme.colors.surfaceContainerLow,
-              paddingBottom: insets.bottom + 16,
+              paddingBottom: (keyboardHeight || insets.bottom) + 16,
               borderTopLeftRadius: theme.radius.xl,
               borderTopRightRadius: theme.radius.xl,
             },

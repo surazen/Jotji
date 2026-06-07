@@ -1,6 +1,6 @@
 /** Notebook data access. Static SQL + bound params. */
 import { newId, nowMs } from '../../utils/ids';
-import { all, run } from '../database';
+import { all, first, run } from '../database';
 import type { Notebook } from '../types';
 
 type NotebookRow = {
@@ -27,6 +27,11 @@ export async function listNotebooks(): Promise<NotebookWithCount[]> {
       ORDER BY nb.name COLLATE NOCASE ASC`,
   );
   return rows.map((r) => ({ ...mapNotebook(r), noteCount: r.note_count }));
+}
+
+export async function getNotebook(id: string): Promise<Notebook | undefined> {
+  const row = await first<NotebookRow>(`SELECT * FROM notebooks WHERE id = ?`, [id]);
+  return row ? mapNotebook(row) : undefined;
 }
 
 export async function createNotebook(name: string, color: string): Promise<Notebook> {

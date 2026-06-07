@@ -5,6 +5,7 @@ import { Button } from '@core/components/Button';
 import { Icon } from '@core/components/Icon';
 import { AppText } from '@core/components/Text';
 import { authenticate } from '@core/security/appLock';
+import { beginProtectedInteraction, isAppLockSuppressed } from '@core/security/appLockController';
 import { useTheme } from '@core/theme/useTheme';
 import { useSettingsStore } from '@features/profile/store/settingsStore';
 
@@ -24,7 +25,9 @@ export function AppLockGate({ children }: { children: ReactNode }) {
   const tryUnlock = async () => {
     if (authenticating) return;
     setAuthenticating(true);
+    const release = beginProtectedInteraction();
     const ok = await authenticate('Unlock Jotji');
+    release();
     setAuthenticating(false);
     if (ok) setLocked(false);
   };
@@ -45,7 +48,12 @@ export function AppLockGate({ children }: { children: ReactNode }) {
     const sub = AppState.addEventListener('change', (next) => {
       const prev = appState.current;
       appState.current = next;
-      if (enabled && prev.match(/inactive|background/) && next === 'active') {
+      if (
+        enabled &&
+        prev.match(/inactive|background/) &&
+        next === 'active' &&
+        !isAppLockSuppressed()
+      ) {
         setLocked(true);
         void tryUnlock();
       }

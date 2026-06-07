@@ -10,6 +10,7 @@ import {
   type Theme as NavTheme,
 } from '@react-navigation/native';
 
+import { Button } from '@core/components/Button';
 import { ToastHost } from '@core/components/Toast';
 import { AppText } from '@core/components/Text';
 import { useBootstrap } from '@core/bootstrap';
@@ -38,17 +39,18 @@ function buildNavTheme(theme: Theme): NavTheme {
 
 function AppInner() {
   const theme = useTheme();
-  const { ready, error } = useBootstrap();
+  const { ready, error, retry } = useBootstrap();
 
   if (error) {
     return (
       <View style={[styles.center, { backgroundColor: theme.colors.surface }]}>
-        <AppText variant="titleMd" color="error">
-          Something went wrong starting Jotji.
+        <AppText variant="titleMd" color="onSurface">
+          Couldn&apos;t open Jotji
         </AppText>
         <AppText variant="bodyMd" color="onSurfaceVariant" style={styles.errorDetail}>
           {error.message}
         </AppText>
+        <Button label="Try again" onPress={retry} style={styles.retryBtn} />
       </View>
     );
   }
@@ -88,4 +90,5 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, gap: 8 },
   errorDetail: { textAlign: 'center' },
+  retryBtn: { marginTop: 16, minWidth: 180 },
 });

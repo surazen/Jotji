@@ -1,6 +1,8 @@
 /** Thin wrappers around expo-image-picker returning a normalized result. */
 import * as ImagePicker from 'expo-image-picker';
 
+import { runProtected } from '@core/security/appLockController';
+
 export type PickedImage = {
   uri: string;
   mime: string;
@@ -20,20 +22,24 @@ function toPicked(result: ImagePicker.ImagePickerResult): PickedImage | null {
 }
 
 export async function pickFromGallery(): Promise<PickedImage | null> {
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ['images'],
-    quality: 0.85,
-    allowsMultipleSelection: false,
+  return runProtected(async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      quality: 0.85,
+      allowsMultipleSelection: false,
+    });
+    return toPicked(result);
   });
-  return toPicked(result);
 }
 
 export async function pickFromCamera(): Promise<PickedImage | null> {
   const permission = await ImagePicker.requestCameraPermissionsAsync();
   if (!permission.granted) return null;
-  const result = await ImagePicker.launchCameraAsync({
-    mediaTypes: ['images'],
-    quality: 0.85,
+  return runProtected(async () => {
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ['images'],
+      quality: 0.85,
+    });
+    return toPicked(result);
   });
-  return toPicked(result);
 }

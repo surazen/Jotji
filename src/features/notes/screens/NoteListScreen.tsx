@@ -22,6 +22,7 @@ import { useNotesStore } from '@features/notes/store/notesStore';
 import type { RootStackParamList } from '@navigation/types';
 
 import { NoteCard } from '../components/NoteCard';
+import { shareNoteText } from '../utils/shareNote';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -49,6 +50,11 @@ export function NoteListScreen() {
           onPress: () => togglePin(menuNote.id, !menuNote.isPinned),
         },
         { icon: 'folder', label: 'Move to notebook', onPress: () => setMoveNote(menuNote) },
+        {
+          icon: 'share-2',
+          label: 'Share',
+          onPress: () => shareNoteText(menuNote.title, menuNote.bodyPlain),
+        },
         {
           icon: 'trash-2',
           label: 'Delete',
@@ -183,7 +189,7 @@ function ListHeader({
         </View>
       ) : null}
 
-      {hasNotes ? (
+      {hasNotes && pinned.length > 0 ? (
         <AppText variant="labelLg" color="onSurfaceVariant" style={styles.allLabel}>
           All notes
         </AppText>

@@ -8,7 +8,13 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { Toolbar, useEditorBridge, useEditorContent } from '@10play/tentap-editor';
+import {
+  CoreBridge,
+  TenTapStartKit,
+  Toolbar,
+  useEditorBridge,
+  useEditorContent,
+} from '@10play/tentap-editor';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -19,19 +25,23 @@ import { BottomSheet } from '@core/components/BottomSheet';
 import { Icon } from '@core/components/Icon';
 import { toast } from '@core/components/Toast';
 import * as attachmentsRepo from '@core/db/repositories/attachmentsRepo';
+import * as notebooksRepo from '@core/db/repositories/notebooksRepo';
 import * as notesRepo from '@core/db/repositories/notesRepo';
 import * as tagsRepo from '@core/db/repositories/tagsRepo';
 import type { Attachment, Tag } from '@core/db/types';
 import { htmlToPlainText } from '@core/security/htmlSanitizer';
 import { isAllowedImageMime } from '@core/utils/files';
 import { useTheme } from '@core/theme/useTheme';
+import { NotebookPicker } from '@features/notebooks/components/NotebookPicker';
 import { TagInput } from '@features/tags/components/TagInput';
 import type { RootStackParamList } from '@navigation/types';
 
 import { AttachmentBar } from '../components/AttachmentBar';
 import { AttachmentStrip } from '../components/AttachmentStrip';
+import { buildEditorCss, buildEditorTheme, injectEditorCss } from '../components/editorTheme';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { pickFromCamera, pickFromGallery } from '../utils/pickImage';
+import { shareNoteText } from '../utils/shareNote';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'NoteEditor'>;
 
@@ -45,6 +55,7 @@ export function NoteEditorScreen() {
   const [initialHtml, setInitialHtml] = useState('');
   const [initialTags, setInitialTags] = useState<Tag[]>([]);
   const [initialAttachments, setInitialAttachments] = useState<Attachment[]>([]);
+  const [initialNotebookId, setInitialNotebookId] = useState<string | null>(null);
   const [createdHere, setCreatedHere] = useState(false);
 
   useEffect(() => {
@@ -67,6 +78,7 @@ export function NoteEditorScreen() {
       setInitialHtml(note?.bodyHtml ?? '');
       setInitialTags(tags);
       setInitialAttachments(attachments);
+      setInitialNotebookId(note?.notebookId ?? null);
       setReady(true);
     })();
     return () => {
@@ -95,6 +107,7 @@ export function NoteEditorScreen() {
       initialHtml={initialHtml}
       initialTags={initialTags}
       initialAttachments={initialAttachments}
+      initialNotebookId={initialNotebookId}
     />
   );
 }
@@ -106,6 +119,7 @@ type EditorBodyProps = {
   initialHtml: string;
   initialTags: Tag[];
   initialAttachments: Attachment[];
+  initialNotebookId: string | null;
 };
 
 function EditorBody({
@@ -115,6 +129,7 @@ function EditorBody({
   initialHtml,
   initialTags,
   initialAttachments,
+  initialNotebookId,
 }: EditorBodyProps) {
   const theme = useTheme();
   const navigation = useNavigation<Nav>();
@@ -122,14 +137,39 @@ function EditorBody({
   const [title, setTitle] = useState(initialTitle);
   const [tags, setTags] = useState<Tag[]>(initialTags);
   const [attachments, setAttachments] = useState<Attachment[]>(initialAttachments);
+  const [notebookId, setNotebookId] = useState<string | null>(initialNotebookId);
+  const [notebookName, setNotebookName] = useState<string | null>(null);
   const [tagSheetOpen, setTagSheetOpen] = useState(false);
+  const [notebookSheetOpen, setNotebookSheetOpen] = useState(false);
+
+  // Resolve the current notebook's display name.
+  useEffect(() => {
+    let active = true;
+    if (!notebookId) {
+      setNotebookName(null);
+      return;
+    }
+    notebooksRepo.getNotebook(notebookId).then((nb) => {
+      if (active) setNotebookName(nb?.name ?? null);
+    });
+    return () => {
+      active = false;
+    };
+  }, [notebookId]);
 
   const editor = useEditorBridge({
     initialContent: initialHtml || '<p></p>',
     avoidIosKeyboard: true,
     autofocus: !initialTitle && !initialHtml,
+    bridgeExtensions: [...TenTapStartKit, CoreBridge.configureCSS(buildEditorCss(theme))],
+    theme: buildEditorTheme(theme),
   });
   const liveHtml = useEditorContent(editor, { type: 'html' });
+
+  // Re-theme the WebView content when light/dark (or font size) changes.
+  useEffect(() => {
+    injectEditorCss(editor, buildEditorCss(theme));
+  }, [editor, theme]);
 
   // Keep the latest values in refs so the unmount save sees current data.
   const htmlRef = useRef(initialHtml);
@@ -153,6 +193,14 @@ function EditorBody({
     await notesRepo.updateNote(noteId, { title: titleRef.current, bodyHtml: htmlRef.current });
   }, [noteId]);
 
+  // Debounced autosave while editing, so edits survive an app kill or crash.
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      void persist();
+    }, 700);
+    return () => clearTimeout(handle);
+  }, [title, liveHtml, persist]);
+
   // Save on leaving; remove the note if it was created here and left empty.
   useEffect(() => {
     const unsub = navigation.addListener('beforeRemove', () => {
@@ -174,6 +222,11 @@ function EditorBody({
     await persist();
     toast.success('Note saved');
     navigation.goBack();
+  };
+
+  const onShare = async () => {
+    await persist();
+    await shareNoteText(titleRef.current, htmlToPlainText(htmlRef.current));
   };
 
   const addImage = async (source: 'camera' | 'gallery') => {
@@ -216,16 +269,26 @@ function EditorBody({
     await notesRepo.setNoteTags(noteId, next.map((t) => t.id));
   };
 
+  const onChangeNotebook = async (id: string | null) => {
+    setNotebookId(id);
+    await notesRepo.moveToNotebook(noteId, id);
+  };
+
   return (
     <Screen edges={['top', 'left', 'right']}>
       <StackHeader
         subtitle="Draft"
         right={
-          <Pressable onPress={onSave} hitSlop={8} style={styles.saveBtn}>
-            <AppText variant="labelLg" color="primary">
-              Save
-            </AppText>
-          </Pressable>
+          <View style={styles.headerActions}>
+            <Pressable onPress={onShare} hitSlop={8} style={styles.headerIcon}>
+              <Icon name="share-2" size={20} color="onSurfaceVariant" />
+            </Pressable>
+            <Pressable onPress={onSave} hitSlop={8} style={styles.saveBtn}>
+              <AppText variant="labelLg" color="primary">
+                Save
+              </AppText>
+            </Pressable>
+          </View>
         }
       />
 
@@ -242,6 +305,13 @@ function EditorBody({
           style={[theme.text.headlineSm, styles.title, { color: theme.colors.onSurface }]}
           multiline
         />
+
+        <Pressable onPress={() => setNotebookSheetOpen(true)} style={styles.notebookRow}>
+          <Icon name="book" size={14} color="primary" />
+          <AppText variant="labelMd" color="primary">
+            {notebookName ?? 'Add to notebook'}
+          </AppText>
+        </Pressable>
 
         <AttachmentStrip attachments={attachments} onRemove={removeAttachment} />
 
@@ -271,6 +341,13 @@ function EditorBody({
       <BottomSheet visible={tagSheetOpen} onClose={() => setTagSheetOpen(false)} title="Tags">
         <TagInput tags={tags} onAdd={addTag} onRemove={removeTag} />
       </BottomSheet>
+
+      <NotebookPicker
+        visible={notebookSheetOpen}
+        selectedId={notebookId}
+        onClose={() => setNotebookSheetOpen(false)}
+        onSelect={onChangeNotebook}
+      />
     </Screen>
   );
 }
@@ -278,8 +355,11 @@ function EditorBody({
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  headerIcon: { padding: 6 },
   saveBtn: { paddingHorizontal: 8, paddingVertical: 6 },
   title: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 },
+  notebookRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, paddingBottom: 6 },
   editor: { flex: 1, paddingHorizontal: 12 },
   bottomBar: {
     flexDirection: 'row',
