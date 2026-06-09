@@ -102,6 +102,7 @@ export function NoteListScreen() {
               note={item}
               onPress={() => openNote(item.id)}
               onLongPress={() => setMenuNote(item)}
+              onMore={() => setMenuNote(item)}
               onTogglePin={() => togglePin(item.id, !item.isPinned)}
               onDelete={() => deleteNote(item.id)}
             />

@@ -94,6 +94,7 @@ export function NotebookDetailScreen() {
               note={item}
               onPress={() => navigation.navigate('NoteEditor', { noteId: item.id })}
               onLongPress={() => setMenuNote(item)}
+              onMore={() => setMenuNote(item)}
               onTogglePin={async () => {
                 await notesRepo.setPinned(item.id, !item.isPinned);
                 await reload();

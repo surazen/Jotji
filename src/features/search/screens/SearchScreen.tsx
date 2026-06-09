@@ -3,16 +3,19 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+import { ContextMenu, type ContextAction } from '@core/components/ContextMenu';
 import { EmptyState } from '@core/components/EmptyState';
 import { Screen } from '@core/components/Screen';
 import { AppText } from '@core/components/Text';
 import * as notesRepo from '@core/db/repositories/notesRepo';
 import type { NoteWithRelations } from '@core/db/types';
 import { useResponsive } from '@core/utils/useResponsive';
+import { NotebookPicker } from '@features/notebooks/components/NotebookPicker';
 import { TagCloud } from '@features/tags/components/TagCloud';
 import { useTagsStore } from '@features/tags/store/tagsStore';
 import type { TagWithCount } from '@features/tags/types';
 import { useNotesStore } from '@features/notes/store/notesStore';
+import { shareNoteText } from '@features/notes/utils/shareNote';
 import type { RootStackParamList } from '@navigation/types';
 
 import { NoteCard } from '@features/notes/components/NoteCard';
@@ -28,6 +31,8 @@ export function SearchScreen() {
   const [query, setQuery] = useState('');
   const [activeTag, setActiveTag] = useState<TagWithCount | null>(null);
   const [results, setResults] = useState<NoteWithRelations[]>([]);
+  const [menuNote, setMenuNote] = useState<NoteWithRelations | null>(null);
+  const [moveNote, setMoveNote] = useState<NoteWithRelations | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -67,6 +72,39 @@ export function SearchScreen() {
     await useNotesStore.getState().reload();
   };
 
+  const menuActions: ContextAction[] = menuNote
+    ? [
+        {
+          icon: 'edit-3',
+          label: 'Edit',
+          onPress: () => navigation.navigate('NoteEditor', { noteId: menuNote.id }),
+        },
+        {
+          icon: 'bookmark',
+          label: menuNote.isPinned ? 'Unpin' : 'Pin',
+          onPress: async () => {
+            await notesRepo.setPinned(menuNote.id, !menuNote.isPinned);
+            await refreshAfterMutation();
+          },
+        },
+        { icon: 'folder', label: 'Move to notebook', onPress: () => setMoveNote(menuNote) },
+        {
+          icon: 'share-2',
+          label: 'Share',
+          onPress: () => shareNoteText(menuNote.title, menuNote.bodyPlain),
+        },
+        {
+          icon: 'trash-2',
+          label: 'Delete',
+          destructive: true,
+          onPress: async () => {
+            await notesRepo.deleteNote(menuNote.id);
+            await refreshAfterMutation();
+          },
+        },
+      ]
+    : [];
+
   return (
     <Screen>
       <View style={[styles.content, { maxWidth: contentMaxWidth }]}>
@@ -100,6 +138,8 @@ export function SearchScreen() {
                 key={note.id}
                 note={note}
                 onPress={() => navigation.navigate('NoteEditor', { noteId: note.id })}
+                onLongPress={() => setMenuNote(note)}
+                onMore={() => setMenuNote(note)}
                 onTogglePin={async () => {
                   await notesRepo.setPinned(note.id, !note.isPinned);
                   await refreshAfterMutation();
@@ -113,6 +153,26 @@ export function SearchScreen() {
           </ScrollView>
         )}
       </View>
+
+      <ContextMenu
+        visible={!!menuNote}
+        onClose={() => setMenuNote(null)}
+        title={menuNote?.title || 'Note'}
+        actions={menuActions}
+      />
+
+      <NotebookPicker
+        visible={!!moveNote}
+        selectedId={moveNote?.notebookId ?? null}
+        onClose={() => setMoveNote(null)}
+        onSelect={async (targetId) => {
+          if (moveNote) {
+            await notesRepo.moveToNotebook(moveNote.id, targetId);
+            await refreshAfterMutation();
+          }
+          setMoveNote(null);
+        }}
+      />
     </Screen>
   );
 }

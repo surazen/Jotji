@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import ReanimatedSwipeable, {
   type SwipeableMethods,
 } from 'react-native-gesture-handler/ReanimatedSwipeable';
@@ -16,15 +16,25 @@ type NoteCardProps = {
   note: NoteWithRelations;
   onPress: () => void;
   onLongPress?: () => void;
+  /** Opens the action menu from the visible "⋮" button (same as long-press). */
+  onMore?: () => void;
   onTogglePin: () => void;
   onDelete: () => void;
 };
 
 /**
  * Note "bubble" card: asymmetric corners, tonal surface (no borders), 98% press
- * scale. Swipe right reveals Pin (amber); swipe left reveals Delete (red).
+ * scale. A visible "⋮" button opens the full action menu; swipe right reveals
+ * Pin (amber) and swipe left reveals Delete (red) as quick shortcuts.
  */
-export function NoteCard({ note, onPress, onLongPress, onTogglePin, onDelete }: NoteCardProps) {
+export function NoteCard({
+  note,
+  onPress,
+  onLongPress,
+  onMore,
+  onTogglePin,
+  onDelete,
+}: NoteCardProps) {
   const theme = useTheme();
   const ref = useRef<SwipeableMethods>(null);
 
@@ -71,6 +81,17 @@ export function NoteCard({ note, onPress, onLongPress, onTogglePin, onDelete }: 
             {note.title || 'Untitled'}
           </AppText>
           {note.isPinned ? <Icon name="bookmark" size={16} color="pin" /> : null}
+          {onMore ? (
+            <Pressable
+              onPress={onMore}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="Note actions"
+              style={styles.more}
+            >
+              <Icon name="more-vertical" size={18} color="onSurfaceVariant" />
+            </Pressable>
+          ) : null}
         </View>
 
         <AppText variant="bodyMd" color="onSurfaceVariant" numberOfLines={2} style={styles.preview}>
@@ -105,8 +126,9 @@ export function NoteCard({ note, onPress, onLongPress, onTogglePin, onDelete }: 
 
 const styles = StyleSheet.create({
   card: { padding: 16, marginBottom: 16 },
-  headerRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8 },
-  title: { flexShrink: 1 },
+  headerRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  title: { flex: 1 },
+  more: { padding: 2, marginRight: -4 },
   preview: { marginTop: 6 },
   tags: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 12 },
   footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 14, marginTop: 12 },
