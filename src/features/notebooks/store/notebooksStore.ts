@@ -2,12 +2,13 @@ import { create } from 'zustand';
 
 import * as notebooksRepo from '@core/db/repositories/notebooksRepo';
 import type { NotebookWithCount } from '@core/db/repositories/notebooksRepo';
+import type { Notebook } from '@core/db/types';
 
 type NotebooksState = {
   notebooks: NotebookWithCount[];
   loading: boolean;
   load: () => Promise<void>;
-  create: (name: string, color: string) => Promise<void>;
+  create: (name: string, color: string) => Promise<Notebook>;
   rename: (id: string, name: string) => Promise<void>;
   setColor: (id: string, color: string) => Promise<void>;
   remove: (id: string) => Promise<void>;
@@ -22,8 +23,9 @@ export const useNotebooksStore = create<NotebooksState>((set, get) => ({
     set({ notebooks, loading: false });
   },
   create: async (name, color) => {
-    await notebooksRepo.createNotebook(name, color);
+    const created = await notebooksRepo.createNotebook(name, color);
     await get().load();
+    return created;
   },
   rename: async (id, name) => {
     await notebooksRepo.renameNotebook(id, name);
