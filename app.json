@@ -23,7 +23,7 @@
       "package": "com.jotji.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#fdf4ed"
+        "backgroundColor": "#e7825d"
       },
       "predictiveBackGestureEnabled": false,
       "permissions": [
