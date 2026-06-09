@@ -12,6 +12,7 @@ import {
   CoreBridge,
   TenTapStartKit,
   Toolbar,
+  useBridgeState,
   useEditorBridge,
   useEditorContent,
 } from '@10play/tentap-editor';
@@ -165,6 +166,11 @@ function EditorBody({
     theme: buildEditorTheme(theme),
   });
   const liveHtml = useEditorContent(editor, { type: 'html' });
+  // Drive the formatting toolbar from the WebView's focus state (reported over
+  // the bridge). TenTap's default visibility relies on RN's keyboardDidShow
+  // event, which doesn't fire reliably under Android edge-to-edge + new arch,
+  // so the toolbar would stay hidden even while typing.
+  const editorState = useBridgeState(editor);
 
   // Re-theme the WebView content when light/dark (or font size) changes.
   useEffect(() => {
@@ -351,7 +357,7 @@ function EditorBody({
           ) : null}
         </View>
 
-        <Toolbar editor={editor} />
+        <Toolbar editor={editor} hidden={!editorState.isFocused} />
       </KeyboardAvoidingView>
 
       <BottomSheet visible={tagSheetOpen} onClose={() => setTagSheetOpen(false)} title="Tags">
