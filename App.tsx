@@ -11,6 +11,7 @@ import {
 } from '@react-navigation/native';
 
 import { Button } from '@core/components/Button';
+import { SheetHost } from '@core/components/Overlay';
 import { ToastHost } from '@core/components/Toast';
 import { AppText } from '@core/components/Text';
 import { useBootstrap } from '@core/bootstrap';
@@ -68,6 +69,7 @@ function AppInner() {
       <AppLockGate>
         <RootNavigator />
       </AppLockGate>
+      <SheetHost />
       <ToastHost />
       <StatusBar style={theme.dark ? 'light' : 'dark'} />
     </NavigationContainer>

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  BackHandler,
   Image,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,6 +11,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from './Icon';
+import { Portal } from './Overlay';
 import { AppText } from './Text';
 
 type ImageViewerProps = {
@@ -20,14 +21,29 @@ type ImageViewerProps = {
   onClose: () => void;
 };
 
-/** Full-screen, swipeable image viewer over a black scrim. */
+/** Full-screen, swipeable image viewer over a black scrim (no RN Modal). */
 export function ImageViewer({ images, initialIndex = 0, visible, onClose }: ImageViewerProps) {
   const { width, height } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const [index, setIndex] = useState(initialIndex);
 
+  useEffect(() => {
+    if (visible) setIndex(initialIndex);
+  }, [visible, initialIndex]);
+
+  useEffect(() => {
+    if (!visible) return;
+    const back = BackHandler.addEventListener('hardwareBackPress', () => {
+      onClose();
+      return true;
+    });
+    return () => back.remove();
+  }, [visible, onClose]);
+
+  if (!visible) return null;
+
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
+    <Portal>
       <View style={styles.backdrop}>
         <ScrollView
           horizontal
@@ -60,12 +76,12 @@ export function ImageViewer({ images, initialIndex = 0, visible, onClose }: Imag
           </View>
         ) : null}
       </View>
-    </Modal>
+    </Portal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: '#000000' },
+  backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: '#000000' },
   image: { width: '100%', height: '100%' },
   close: {
     position: 'absolute',
