@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 
 import { BottomSheet } from '@core/components/BottomSheet';
 import { Button } from '@core/components/Button';
@@ -106,7 +106,7 @@ export function NotebookPicker({ visible, onClose, onSelect, selectedId }: Noteb
           </Pressable>
         </View>
       ) : (
-        <ScrollView style={styles.scroll}>
+        <View style={styles.list}>
           <Pressable
             onPress={() => setMode('create')}
             android_ripple={{ color: theme.colors.surfaceContainerHigh }}
@@ -139,14 +139,14 @@ export function NotebookPicker({ visible, onClose, onSelect, selectedId }: Noteb
               {selectedId === row.id ? <Icon name="check" color="primary" /> : null}
             </Pressable>
           ))}
-        </ScrollView>
+        </View>
       )}
     </BottomSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  scroll: { maxHeight: 360 },
+  list: { gap: 2 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 8 },
   dot: { width: 18, height: 18, borderRadius: 9 },
   addDot: { borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
