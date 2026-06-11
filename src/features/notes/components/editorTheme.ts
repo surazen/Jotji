@@ -31,10 +31,25 @@ export function buildEditorTheme(theme: Theme) {
     webview: { backgroundColor: c.surface },
     webviewContainer: { backgroundColor: c.surface },
     toolbar: {
-      toolbarBody: { backgroundColor: c.surfaceContainerLow, borderTopColor: 'transparent' },
+      // The default toolbarBody is `flex: 1`, which makes the toolbar grow to
+      // fill the column (a tall white block). Pin it to a fixed height instead.
+      toolbarBody: {
+        flex: 0,
+        height: 48,
+        backgroundColor: c.surfaceContainerLow,
+        borderTopWidth: 0,
+        borderBottomWidth: 0,
+        borderTopColor: 'transparent',
+        borderBottomColor: 'transparent',
+      },
+      // Buttons/wrappers default to white and stretch vertically; clear them so
+      // the dark toolbarBody shows through in dark mode.
+      toolbarButton: { backgroundColor: 'transparent' },
+      iconWrapper: { backgroundColor: 'transparent' },
+      iconWrapperActive: { backgroundColor: c.primaryContainer },
       icon: { tintColor: c.onSurfaceVariant },
       iconActive: { tintColor: c.primary },
-      iconWrapperActive: { backgroundColor: c.primaryContainer },
+      iconDisabled: { tintColor: c.onSurfaceVariant },
     },
   };
 }
