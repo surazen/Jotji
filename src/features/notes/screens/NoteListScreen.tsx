@@ -26,6 +26,10 @@ import { shareNoteText } from '../utils/shareNote';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
+// Per-app-launch flag: the greeting shows on the first Home view after the app
+// opens, then is consumed so it won't reappear this session. Resets on cold start.
+let greetingConsumed = false;
+
 export function NoteListScreen() {
   const navigation = useNavigation<Nav>();
   const { contentMaxWidth } = useResponsive();
@@ -33,10 +37,18 @@ export function NoteListScreen() {
   const { notes, pinned, loading, load, togglePin, deleteNote } = useNotesStore();
   const [menuNote, setMenuNote] = useState<NoteWithRelations | null>(null);
   const [moveNote, setMoveNote] = useState<NoteWithRelations | null>(null);
+  const [showGreeting, setShowGreeting] = useState(!greetingConsumed);
 
   useFocusEffect(
     useCallback(() => {
       void load();
+      // Leaving Home consumes the greeting so it won't show again this session.
+      return () => {
+        if (!greetingConsumed) {
+          greetingConsumed = true;
+          setShowGreeting(false);
+        }
+      };
     }, [load]),
   );
 
@@ -78,6 +90,7 @@ export function NoteListScreen() {
               pinned={pinned}
               onOpen={openNote}
               hasNotes={notes.length > 0 || showSkeleton}
+              showGreeting={showGreeting}
             />
           }
           ListEmptyComponent={
@@ -148,22 +161,26 @@ function ListHeader({
   pinned,
   onOpen,
   hasNotes,
+  showGreeting,
 }: {
   pinned: NoteWithRelations[];
   onOpen: (id: string) => void;
   hasNotes: boolean;
+  showGreeting: boolean;
 }) {
   const theme = useTheme();
   return (
     <View>
-      <View style={styles.header}>
-        <AppText variant="displaySm" color="onSurface">
-          {greeting()},
-        </AppText>
-        <AppText variant="bodyLg" color="onSurfaceVariant">
-          Your curated thoughts, kept close.
-        </AppText>
-      </View>
+      {showGreeting ? (
+        <View style={styles.header}>
+          <AppText variant="headlineMd" color="onSurface">
+            {greeting()},
+          </AppText>
+          <AppText variant="bodyLg" color="onSurfaceVariant">
+            Your curated thoughts, kept close.
+          </AppText>
+        </View>
+      ) : null}
 
       {pinned.length > 0 ? (
         <View style={styles.pinnedSection}>
