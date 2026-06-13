@@ -1,12 +1,9 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-import { BottomSheet } from '@core/components/BottomSheet';
-import { Button } from '@core/components/Button';
 import { Screen } from '@core/components/Screen';
-import { TextField } from '@core/components/TextField';
 import { AppText } from '@core/components/Text';
 import { toast } from '@core/components/Toast';
 import { deleteSandboxFile, persistImageToSandbox } from '@core/utils/files';
@@ -25,8 +22,10 @@ export function ProfileScreen() {
   const { contentMaxWidth } = useResponsive();
   const { profile, load, setName, setAvatar } = useProfileStore();
 
-  const [nameSheet, setNameSheet] = useState(false);
+  const [editingName, setEditingName] = useState(false);
   const [draftName, setDraftName] = useState('');
+  // Guards against the double commit when onSubmitEditing also triggers onBlur.
+  const editingRef = useRef(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -46,14 +45,18 @@ export function ProfileScreen() {
     }
   };
 
-  const openNameSheet = () => {
+  const startEditName = () => {
     setDraftName(profile.name);
-    setNameSheet(true);
+    editingRef.current = true;
+    setEditingName(true);
   };
 
-  const saveName = async () => {
-    setNameSheet(false);
-    await setName(draftName.trim());
+  const commitName = async () => {
+    if (!editingRef.current) return;
+    editingRef.current = false;
+    setEditingName(false);
+    const next = draftName.trim();
+    if (next !== profile.name) await setName(next);
   };
 
   return (
@@ -63,7 +66,15 @@ export function ProfileScreen() {
           Profile
         </AppText>
 
-        <ProfileCard profile={profile} onEditAvatar={onEditAvatar} onEditName={openNameSheet} />
+        <ProfileCard
+          profile={profile}
+          onEditAvatar={onEditAvatar}
+          editingName={editingName}
+          draftName={draftName}
+          onStartEditName={startEditName}
+          onChangeName={setDraftName}
+          onCommitName={commitName}
+        />
 
         <View style={styles.rows}>
           <SettingsRow icon="settings" label="Settings" onPress={() => navigation.navigate('Settings')} />
@@ -74,20 +85,6 @@ export function ProfileScreen() {
           Jotji keeps everything on your device. No account, no cloud.
         </AppText>
       </ScrollView>
-
-      <BottomSheet visible={nameSheet} onClose={() => setNameSheet(false)} title="Your name">
-        <View style={styles.nameSheet}>
-          <TextField
-            value={draftName}
-            onChangeText={setDraftName}
-            placeholder="Enter your name"
-            autoFocus
-            returnKeyType="done"
-            onSubmitEditing={saveName}
-          />
-          <Button label="Save" onPress={saveName} />
-        </View>
-      </BottomSheet>
     </Screen>
   );
 }
@@ -97,5 +94,4 @@ const styles = StyleSheet.create({
   title: { marginTop: 8, marginBottom: 16 },
   rows: { marginTop: 24 },
   footer: { textAlign: 'center', marginTop: 24 },
-  nameSheet: { gap: 16, paddingBottom: 8 },
 });
