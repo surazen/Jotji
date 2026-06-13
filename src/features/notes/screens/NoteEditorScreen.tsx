@@ -10,8 +10,11 @@ import {
 } from 'react-native';
 import {
   CoreBridge,
+  DEFAULT_TOOLBAR_ITEMS,
+  Images,
   TenTapStartKit,
   Toolbar,
+  type ToolbarItem,
   useBridgeState,
   useEditorBridge,
   useEditorContent,
@@ -45,6 +48,24 @@ import { pickDocumentFile, pickFromCamera, pickFromGallery } from '../utils/pick
 import { shareNoteText } from '../utils/shareNote';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'NoteEditor'>;
+
+// Undo/redo prepended to the formatting toolbar. The history is already tracked
+// by TenTap's UndoRedo extension (part of TenTapStartKit); these just expose it.
+const HISTORY_TOOLBAR_ITEMS: ToolbarItem[] = [
+  {
+    onPress: ({ editor }) => () => editor.undo?.(),
+    active: () => false,
+    disabled: ({ editorState }) => !editorState.canUndo,
+    image: () => Images.undo,
+  },
+  {
+    onPress: ({ editor }) => () => editor.redo?.(),
+    active: () => false,
+    disabled: ({ editorState }) => !editorState.canRedo,
+    image: () => Images.redo,
+  },
+];
+const EDITOR_TOOLBAR_ITEMS: ToolbarItem[] = [...HISTORY_TOOLBAR_ITEMS, ...DEFAULT_TOOLBAR_ITEMS];
 
 export function NoteEditorScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'NoteEditor'>>();
@@ -357,7 +378,7 @@ function EditorBody({
           ) : null}
         </View>
 
-        <Toolbar editor={editor} hidden={!editorState.isFocused} />
+        <Toolbar editor={editor} hidden={!editorState.isFocused} items={EDITOR_TOOLBAR_ITEMS} />
       </KeyboardAvoidingView>
 
       <BottomSheet visible={tagSheetOpen} onClose={() => setTagSheetOpen(false)} title="Tags">
