@@ -1,13 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  Pressable,
-  StyleSheet,
-  TextInput,
-  View,
-} from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import {
   CoreBridge,
   DEFAULT_TOOLBAR_ITEMS,
@@ -334,10 +327,7 @@ function EditorBody({
         }
       />
 
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <View style={styles.flex}>
         <TextInput
           value={title}
           onChangeText={setTitle}
@@ -361,25 +351,30 @@ function EditorBody({
           <RichTextEditor editor={editor} />
         </View>
 
-        <View style={[styles.bottomBar, { backgroundColor: theme.colors.surfaceContainerLow }]}>
-          <AttachmentBar
-            onCamera={() => addImage('camera')}
-            onGallery={() => addImage('gallery')}
-            onAttachFile={addFile}
-            onTag={() => setTagSheetOpen(true)}
-          />
-          {tags.length > 0 ? (
-            <View style={styles.tagSummary}>
-              <Icon name="hash" size={13} color="onSurfaceVariant" />
-              <AppText variant="labelMd" color="onSurfaceVariant">
-                {tags.length} {tags.length === 1 ? 'tag' : 'tags'}
-              </AppText>
-            </View>
-          ) : null}
-        </View>
+        {/* Pin the action + formatting bars directly above the keyboard. RN's
+            KeyboardAvoidingView doesn't work under Android edge-to-edge, so the
+            bars were buried by the keyboard; KeyboardStickyView tracks it. */}
+        <KeyboardStickyView style={{ backgroundColor: theme.colors.surfaceContainerLow }}>
+          <View style={[styles.bottomBar, { backgroundColor: theme.colors.surfaceContainerLow }]}>
+            <AttachmentBar
+              onCamera={() => addImage('camera')}
+              onGallery={() => addImage('gallery')}
+              onAttachFile={addFile}
+              onTag={() => setTagSheetOpen(true)}
+            />
+            {tags.length > 0 ? (
+              <View style={styles.tagSummary}>
+                <Icon name="hash" size={13} color="onSurfaceVariant" />
+                <AppText variant="labelMd" color="onSurfaceVariant">
+                  {tags.length} {tags.length === 1 ? 'tag' : 'tags'}
+                </AppText>
+              </View>
+            ) : null}
+          </View>
 
-        <Toolbar editor={editor} hidden={!editorState.isFocused} items={EDITOR_TOOLBAR_ITEMS} />
-      </KeyboardAvoidingView>
+          <Toolbar editor={editor} hidden={!editorState.isFocused} items={EDITOR_TOOLBAR_ITEMS} />
+        </KeyboardStickyView>
+      </View>
 
       <BottomSheet visible={tagSheetOpen} onClose={() => setTagSheetOpen(false)} title="Tags">
         <TagInput tags={tags} onAdd={addTag} onRemove={removeTag} />
