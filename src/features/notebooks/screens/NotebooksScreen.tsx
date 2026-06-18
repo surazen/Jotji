@@ -5,7 +5,6 @@ import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ContextMenu, type ContextAction } from '@core/components/ContextMenu';
-import { EmptyState } from '@core/components/EmptyState';
 import { Icon } from '@core/components/Icon';
 import { Screen } from '@core/components/Screen';
 import { AppText } from '@core/components/Text';
@@ -20,11 +19,25 @@ import { NotebookFormSheet } from '../components/NotebookFormSheet';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
+// Sentinel id for the virtual "General" card (unfiled notes, notebook_id NULL).
+const GENERAL_ID = '__general__';
+
 export function NotebooksScreen() {
   const theme = useTheme();
   const navigation = useNavigation<Nav>();
   const { gridColumns, contentMaxWidth } = useResponsive();
-  const { notebooks, create, rename, setColor, remove, load } = useNotebooksStore();
+  const { notebooks, generalCount, create, rename, setColor, remove, load } = useNotebooksStore();
+
+  // "General" always exists — the default bucket for notes not in a notebook.
+  const generalCard: NotebookWithCount = {
+    id: GENERAL_ID,
+    name: 'General',
+    color: theme.colors.primary,
+    createdAt: 0,
+    updatedAt: 0,
+    noteCount: generalCount,
+  };
+  const data: NotebookWithCount[] = [generalCard, ...notebooks];
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<NotebookWithCount | null>(null);
@@ -70,30 +83,28 @@ export function NotebooksScreen() {
         </View>
 
         <FlashList
-          data={notebooks}
+          data={data}
           numColumns={gridColumns}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.list}
-          ListEmptyComponent={
-            <EmptyState
-              icon="book"
-              title="No notebooks yet"
-              message="Group related notes into notebooks to keep things tidy."
-              ctaLabel="Create a notebook"
-              onCta={() => setCreateOpen(true)}
-            />
-          }
-          renderItem={({ item }) => (
-            <View style={styles.cell}>
-              <NotebookCard
-                notebook={item}
-                onPress={() =>
-                  navigation.navigate('NotebookDetail', { notebookId: item.id, name: item.name })
-                }
-                onLongPress={() => setMenuFor(item)}
-              />
-            </View>
-          )}
+          renderItem={({ item }) => {
+            const isGeneral = item.id === GENERAL_ID;
+            return (
+              <View style={styles.cell}>
+                <NotebookCard
+                  notebook={item}
+                  onPress={() =>
+                    navigation.navigate('NotebookDetail', {
+                      notebookId: isGeneral ? null : item.id,
+                      name: item.name,
+                    })
+                  }
+                  // General can't be renamed or deleted, so no context menu.
+                  onLongPress={isGeneral ? undefined : () => setMenuFor(item)}
+                />
+              </View>
+            );
+          }}
         />
       </View>
 

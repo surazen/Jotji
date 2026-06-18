@@ -13,7 +13,8 @@ export type RootStackParamList = {
   Tabs: NavigatorScreenParams<AppTabParamList> | undefined;
   /** noteId omitted = create a new note (optionally inside notebookId). */
   NoteEditor: { noteId?: string; notebookId?: string } | undefined;
-  NotebookDetail: { notebookId: string; name: string };
+  /** notebookId null = the virtual "General" bucket (unfiled notes). */
+  NotebookDetail: { notebookId: string | null; name: string };
   Settings: undefined;
   Support: undefined;
 };

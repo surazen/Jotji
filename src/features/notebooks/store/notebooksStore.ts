@@ -2,10 +2,13 @@ import { create } from 'zustand';
 
 import * as notebooksRepo from '@core/db/repositories/notebooksRepo';
 import type { NotebookWithCount } from '@core/db/repositories/notebooksRepo';
+import * as notesRepo from '@core/db/repositories/notesRepo';
 import type { Notebook } from '@core/db/types';
 
 type NotebooksState = {
   notebooks: NotebookWithCount[];
+  /** Count of unfiled notes shown on the virtual "General" notebook. */
+  generalCount: number;
   loading: boolean;
   load: () => Promise<void>;
   create: (name: string, color: string) => Promise<Notebook>;
@@ -16,11 +19,15 @@ type NotebooksState = {
 
 export const useNotebooksStore = create<NotebooksState>((set, get) => ({
   notebooks: [],
+  generalCount: 0,
   loading: false,
   load: async () => {
     set({ loading: true });
-    const notebooks = await notebooksRepo.listNotebooks();
-    set({ notebooks, loading: false });
+    const [notebooks, generalCount] = await Promise.all([
+      notebooksRepo.listNotebooks(),
+      notesRepo.countUnfiledNotes(),
+    ]);
+    set({ notebooks, generalCount, loading: false });
   },
   create: async (name, color) => {
     const created = await notebooksRepo.createNotebook(name, color);

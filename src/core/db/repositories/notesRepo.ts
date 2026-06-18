@@ -48,6 +48,8 @@ const SORT_COLUMNS: Record<SortKey, string> = {
 
 export type ListOptions = {
   notebookId?: string;
+  /** Only notes not in any notebook (the "General" bucket). */
+  unfiled?: boolean;
   tagId?: string;
   sort?: SortKey;
   pinnedFirst?: boolean;
@@ -90,13 +92,16 @@ async function decorate(notes: Note[]): Promise<NoteWithRelations[]> {
 }
 
 export async function listNotes(opts: ListOptions = {}): Promise<NoteWithRelations[]> {
-  const { notebookId, tagId, sort = 'updated', pinnedFirst = true } = opts;
+  const { notebookId, unfiled, tagId, sort = 'updated', pinnedFirst = true } = opts;
   const where: string[] = [];
   const params: (string | number)[] = [];
 
   if (notebookId) {
     where.push('notebook_id = ?');
     params.push(notebookId);
+  }
+  if (unfiled) {
+    where.push('notebook_id IS NULL');
   }
   if (tagId) {
     where.push('id IN (SELECT note_id FROM note_tags WHERE tag_id = ?)');
@@ -108,6 +113,14 @@ export async function listNotes(opts: ListOptions = {}): Promise<NoteWithRelatio
 
   const rows = await all<NoteRow>(`SELECT * FROM notes ${whereSql} ${orderSql}`, params);
   return decorate(rows.map(mapNote));
+}
+
+/** Count of notes not in any notebook (the "General" bucket). */
+export async function countUnfiledNotes(): Promise<number> {
+  const row = await first<{ c: number }>(
+    `SELECT COUNT(*) AS c FROM notes WHERE notebook_id IS NULL`,
+  );
+  return row?.c ?? 0;
 }
 
 /** Notes pinned to the top (for the horizontal pinned row). */

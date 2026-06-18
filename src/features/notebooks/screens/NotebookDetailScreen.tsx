@@ -30,7 +30,8 @@ export function NotebookDetailScreen() {
   const [moveNote, setMoveNote] = useState<NoteWithRelations | null>(null);
 
   const reload = useCallback(async () => {
-    setNotes(await notesRepo.listNotes({ notebookId }));
+    // notebookId null = the virtual "General" bucket (notes not in a notebook).
+    setNotes(await notesRepo.listNotes(notebookId ? { notebookId } : { unfiled: true }));
   }, [notebookId]);
 
   useFocusEffect(
@@ -86,7 +87,7 @@ export function NotebookDetailScreen() {
               title="Empty notebook"
               message="Add a note to this notebook."
               ctaLabel="Write a note"
-              onCta={() => navigation.navigate('NoteEditor', { notebookId })}
+              onCta={() => navigation.navigate('NoteEditor', notebookId ? { notebookId } : undefined)}
             />
           }
           renderItem={({ item }) => (
@@ -113,7 +114,7 @@ export function NotebookDetailScreen() {
           {
             icon: 'edit-3',
             label: 'New note',
-            onPress: () => navigation.navigate('NoteEditor', { notebookId }),
+            onPress: () => navigation.navigate('NoteEditor', notebookId ? { notebookId } : undefined),
           },
         ]}
       />
