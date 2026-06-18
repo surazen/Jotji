@@ -85,7 +85,7 @@ export function AttachmentStrip({ attachments, onRemove }: Props) {
 }
 
 const styles = StyleSheet.create({
-  row: { gap: 10, paddingHorizontal: 4, paddingVertical: 8 },
+  row: { gap: 10, paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4 },
   tile: { overflow: 'hidden', width: 88, height: 88 },
   fill: { width: '100%', height: '100%' },
   thumb: { width: '100%', height: '100%' },
