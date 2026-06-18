@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { ActivityIndicator, Keyboard, Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { KeyboardStickyView } from 'react-native-keyboard-controller';
 import {
   CoreBridge,
@@ -303,6 +303,19 @@ function EditorBody({
     await notesRepo.moveToNotebook(noteId, id);
   };
 
+  // Bottom sheets must not open behind the keyboard: blur the editor + dismiss
+  // the keyboard first, then show the sheet.
+  const openNotebookSheet = () => {
+    editor.blur();
+    Keyboard.dismiss();
+    setNotebookSheetOpen(true);
+  };
+  const openTagSheet = () => {
+    editor.blur();
+    Keyboard.dismiss();
+    setTagSheetOpen(true);
+  };
+
   return (
     <Screen edges={['top', 'left', 'right']}>
       <StackHeader
@@ -332,7 +345,7 @@ function EditorBody({
           multiline
         />
 
-        <Pressable onPress={() => setNotebookSheetOpen(true)} style={styles.notebookRow}>
+        <Pressable onPress={openNotebookSheet} style={styles.notebookRow}>
           <Icon name="book" size={14} color="primary" />
           <AppText variant="labelMd" color="primary">
             {notebookName ?? 'Add to notebook'}
@@ -356,7 +369,7 @@ function EditorBody({
               onCamera={() => addImage('camera')}
               onGallery={() => addImage('gallery')}
               onAttachFile={addFile}
-              onTag={() => setTagSheetOpen(true)}
+              onTag={openTagSheet}
             />
             {tags.length > 0 ? (
               <View style={styles.tagSummary}>
