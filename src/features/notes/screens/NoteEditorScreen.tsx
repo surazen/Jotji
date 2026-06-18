@@ -356,14 +356,13 @@ function EditorBody({
           <RichTextEditor editor={editor} />
         </View>
 
-        {/* Attachments live at the bottom of the editor (above the action bar),
-            so adding one never bumps the text — like Gmail's attachment tray. */}
-        <AttachmentStrip attachments={attachments} onRemove={removeAttachment} />
-
-        {/* Pin the action + formatting bars directly above the keyboard. RN's
-            KeyboardAvoidingView doesn't work under Android edge-to-edge, so the
-            bars were buried by the keyboard; KeyboardStickyView tracks it. */}
+        {/* Pin the attachment tray + action + formatting bars directly above the
+            keyboard. RN's KeyboardAvoidingView doesn't work under Android
+            edge-to-edge, so they were buried by the keyboard; KeyboardStickyView
+            tracks it. The tray lives inside the sticky group so the bars never
+            overlap (and clip) the thumbnails. */}
         <KeyboardStickyView style={{ backgroundColor: theme.colors.surfaceContainerLow }}>
+          <AttachmentStrip attachments={attachments} onRemove={removeAttachment} />
           <View style={[styles.bottomBar, { backgroundColor: theme.colors.surfaceContainerLow }]}>
             <AttachmentBar
               onCamera={() => addImage('camera')}
