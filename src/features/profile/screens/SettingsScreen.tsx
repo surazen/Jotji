@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
+import { BottomSheet } from '@core/components/BottomSheet';
+import { Icon } from '@core/components/Icon';
 import { Screen } from '@core/components/Screen';
 import { SelectSheet, type SelectOption } from '@core/components/SelectSheet';
 import { StackHeader } from '@core/components/StackHeader';
@@ -37,6 +39,16 @@ const SCALE_OPTIONS: SelectOption<FontScaleKey>[] = (
 
 type Sheet = 'theme' | 'font' | 'scale' | null;
 
+// Evernote only exports .enex from its desktop app, so the steps walk the user
+// from their phone's Evernote to a computer and back.
+const EVERNOTE_STEPS = [
+  'On a Windows or Mac computer, install Evernote and sign in with the same account. Your phone’s notes sync there automatically — no cable needed.',
+  'Select the notes you want, or right-click a notebook in the sidebar.',
+  'Right-click → Export… (or the ••• menu → Export) and choose the ENEX (.enex) format.',
+  'Save the file, then send it to your phone — email it to yourself or upload to Google Drive / Dropbox.',
+  'Back here, tap “Import notes” above and pick the .enex file.',
+];
+
 export function SettingsScreen() {
   const { contentMaxWidth } = useResponsive();
   const {
@@ -51,6 +63,7 @@ export function SettingsScreen() {
   } = useSettingsStore();
 
   const [sheet, setSheet] = useState<Sheet>(null);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   const onImport = async () => {
     try {
@@ -124,6 +137,16 @@ export function SettingsScreen() {
           <AppText variant="bodySm" color="onSurfaceVariant" style={styles.note}>
             Import from an Evernote export (.enex) or a Markdown / text file.
           </AppText>
+          <Pressable
+            onPress={() => setHelpOpen(true)}
+            accessibilityRole="button"
+            style={styles.helpLink}
+          >
+            <Icon name="help-circle" size={15} color="primary" />
+            <AppText variant="labelMd" color="primary">
+              How to export from Evernote (desktop only)
+            </AppText>
+          </Pressable>
         </Section>
       </ScrollView>
 
@@ -151,6 +174,32 @@ export function SettingsScreen() {
         onSelect={setFontScale}
         onClose={() => setSheet(null)}
       />
+
+      <BottomSheet
+        visible={helpOpen}
+        onClose={() => setHelpOpen(false)}
+        title="Export from Evernote"
+      >
+        <View style={styles.helpBody}>
+          <AppText variant="bodyMd" color="onSurfaceVariant">
+            Evernote can only create the .enex file from its desktop app (Windows or Mac) — the
+            mobile app can’t export it.
+          </AppText>
+          {EVERNOTE_STEPS.map((step, i) => (
+            <View key={i} style={styles.step}>
+              <AppText variant="labelLg" color="primary" style={styles.stepNum}>
+                {i + 1}.
+              </AppText>
+              <AppText variant="bodyMd" color="onSurface" style={styles.stepText}>
+                {step}
+              </AppText>
+            </View>
+          ))}
+          <AppText variant="bodySm" color="onSurfaceVariant" style={styles.helpFootnote}>
+            Markdown (.md) and plain-text (.txt) files import the same way.
+          </AppText>
+        </View>
+      </BottomSheet>
     </Screen>
   );
 }
@@ -171,4 +220,10 @@ const styles = StyleSheet.create({
   section: { marginTop: 20 },
   sectionTitle: { marginBottom: 10, marginLeft: 4 },
   note: { marginTop: 4, marginHorizontal: 4 },
+  helpLink: { flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10, marginHorizontal: 4 },
+  helpBody: { gap: 14, paddingBottom: 4 },
+  step: { flexDirection: 'row', gap: 10 },
+  stepNum: { width: 20 },
+  stepText: { flex: 1 },
+  helpFootnote: { marginTop: 2 },
 });
