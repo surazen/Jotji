@@ -1,6 +1,7 @@
 import React, { useEffect, useState, type ReactNode } from 'react';
-import { BackHandler, Keyboard, Pressable, StyleSheet, View } from 'react-native';
-import Animated, { SlideInDown, SlideOutDown } from 'react-native-reanimated';
+import { BackHandler, Pressable, StyleSheet, View } from 'react-native';
+import Animated, { SlideInDown, SlideOutDown, useAnimatedStyle } from 'react-native-reanimated';
+import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '@core/theme/useTheme';
@@ -18,13 +19,15 @@ type BottomSheetProps = {
 /**
  * Slide-up panel over a tappable scrim — rendered through a root-level Portal,
  * NOT a React Native <Modal> (see Overlay.tsx for why). Tonal layering
- * (surfaceContainerLow) defines the panel; it lifts above the keyboard since
- * there's no Modal to auto-resize. Hardware back and scrim taps close it.
+ * (surfaceContainerLow) defines the panel. It lifts above the keyboard using
+ * keyboard-controller's animated height (RN's keyboard events don't fire under
+ * Android edge-to-edge). Hardware back and scrim taps close it.
  */
 export function BottomSheet({ visible, onClose, title, children }: BottomSheetProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  // `height` is the (negative) keyboard offset: 0 closed, -keyboardHeight open.
+  const { height: keyboardHeight } = useReanimatedKeyboardAnimation();
   // Stay mounted briefly after closing so the slide-out animation can play.
   const [rendered, setRendered] = useState(visible);
 
@@ -39,21 +42,17 @@ export function BottomSheet({ visible, onClose, title, children }: BottomSheetPr
 
   useEffect(() => {
     if (!visible) return;
-    const show = Keyboard.addListener('keyboardDidShow', (e) =>
-      setKeyboardHeight(e.endCoordinates.height),
-    );
-    const hide = Keyboard.addListener('keyboardDidHide', () => setKeyboardHeight(0));
     const back = BackHandler.addEventListener('hardwareBackPress', () => {
       onClose();
       return true;
     });
-    return () => {
-      show.remove();
-      hide.remove();
-      back.remove();
-      setKeyboardHeight(0);
-    };
+    return () => back.remove();
   }, [visible, onClose]);
+
+  // Pad the panel above the keyboard (or the bottom inset when it's down).
+  const panelPadding = useAnimatedStyle(() => ({
+    paddingBottom: Math.max(-keyboardHeight.value, insets.bottom) + 16,
+  }));
 
   if (!rendered) return null;
 
@@ -73,10 +72,10 @@ export function BottomSheet({ visible, onClose, title, children }: BottomSheetPr
                 styles.panel,
                 {
                   backgroundColor: theme.colors.surfaceContainerLow,
-                  paddingBottom: (keyboardHeight || insets.bottom) + 16,
                   borderTopLeftRadius: theme.radius.xl,
                   borderTopRightRadius: theme.radius.xl,
                 },
+                panelPadding,
               ]}
             >
               <View style={[styles.grabber, { backgroundColor: theme.colors.surfaceContainerHighest }]} />
