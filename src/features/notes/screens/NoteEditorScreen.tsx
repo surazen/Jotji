@@ -345,12 +345,26 @@ function EditorBody({
           multiline
         />
 
-        <Pressable onPress={openNotebookSheet} style={styles.notebookRow}>
-          <Icon name="book" size={14} color="primary" />
-          <AppText variant="labelMd" color="primary">
-            {notebookName ?? 'Add to notebook'}
-          </AppText>
-        </Pressable>
+        <View style={styles.notebookRow}>
+          <Pressable
+            onPress={openNotebookSheet}
+            style={[
+              styles.notebookChip,
+              notebookName
+                ? { backgroundColor: theme.colors.primaryContainer }
+                : {
+                    backgroundColor: theme.colors.surfaceContainerHigh,
+                    borderWidth: StyleSheet.hairlineWidth,
+                    borderColor: theme.colors.outlineVariant,
+                  },
+            ]}
+          >
+            <Icon name="book" size={13} color={notebookName ? 'onPrimaryContainer' : 'primary'} />
+            <AppText variant="labelMd" color={notebookName ? 'onPrimaryContainer' : 'primary'}>
+              {notebookName ?? 'Add to notebook'}
+            </AppText>
+          </Pressable>
+        </View>
 
         <View style={styles.editor}>
           <RichTextEditor editor={editor} />
@@ -407,7 +421,16 @@ const styles = StyleSheet.create({
   headerIcon: { padding: 6 },
   saveBtn: { paddingHorizontal: 8, paddingVertical: 6 },
   title: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 },
-  notebookRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 20, paddingBottom: 6 },
+  notebookRow: { flexDirection: 'row', paddingHorizontal: 20, paddingTop: 2, paddingBottom: 10 },
+  notebookChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    alignSelf: 'flex-start',
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+  },
   editor: { flex: 1, paddingHorizontal: 12 },
   bottomBar: {
     flexDirection: 'row',
