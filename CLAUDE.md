@@ -43,6 +43,9 @@ Building the APK needs **JDK 17+** (the box currently has JDK 11) and the Androi
 - Search input goes through `buildFtsMatchQuery` before any FTS `MATCH`.
 - DB encryption key lives only in expo-secure-store; never in source/.env/AsyncStorage.
 
-## Deferred (not in MVP)
+## Scope
+This is a full Android production app (no "MVP" cutline). Ship-quality on every change.
+
+## Roadmap (planned, not yet built)
 AI (Claude Haiku, isolated + prompt-injection-safe), checklists, reminders, voice notes,
 document scanner, iOS, cloud sync. Donation URL in `SupportScreen.tsx` is a placeholder.

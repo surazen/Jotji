@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
+import { ShareIntentProvider } from 'expo-share-intent';
 import {
   DarkTheme,
   DefaultTheme,
@@ -19,8 +20,10 @@ import { useBootstrap } from '@core/bootstrap';
 import { ThemeProvider } from '@core/theme/ThemeProvider';
 import { useTheme } from '@core/theme/useTheme';
 import type { Theme } from '@core/theme/types';
+import { useShareTarget } from '@features/share/useShareTarget';
 import { AppLockGate } from '@features/profile/components/AppLockGate';
 import { RootNavigator } from '@navigation/RootNavigator';
+import { navigationRef } from '@navigation/navigationRef';
 
 function buildNavTheme(theme: Theme): NavTheme {
   const base = theme.dark ? DarkTheme : DefaultTheme;
@@ -42,6 +45,10 @@ function buildNavTheme(theme: Theme): NavTheme {
 function AppInner() {
   const theme = useTheme();
   const { ready, error, retry } = useBootstrap();
+  const [navReady, setNavReady] = useState(false);
+
+  // Process Android share-sheet payloads once the DB and navigator are ready.
+  useShareTarget(ready && navReady);
 
   if (error) {
     return (
@@ -66,7 +73,11 @@ function AppInner() {
   }
 
   return (
-    <NavigationContainer theme={buildNavTheme(theme)}>
+    <NavigationContainer
+      ref={navigationRef}
+      theme={buildNavTheme(theme)}
+      onReady={() => setNavReady(true)}
+    >
       <AppLockGate>
         <RootNavigator />
       </AppLockGate>
@@ -79,15 +90,17 @@ function AppInner() {
 
 export default function App() {
   return (
-    <GestureHandlerRootView style={styles.flex}>
-      <KeyboardProvider>
-        <SafeAreaProvider>
-          <ThemeProvider>
-            <AppInner />
-          </ThemeProvider>
-        </SafeAreaProvider>
-      </KeyboardProvider>
-    </GestureHandlerRootView>
+    <ShareIntentProvider>
+      <GestureHandlerRootView style={styles.flex}>
+        <KeyboardProvider>
+          <SafeAreaProvider>
+            <ThemeProvider>
+              <AppInner />
+            </ThemeProvider>
+          </SafeAreaProvider>
+        </KeyboardProvider>
+      </GestureHandlerRootView>
+    </ShareIntentProvider>
   );
 }
 

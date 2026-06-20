@@ -43,7 +43,13 @@
           "cameraPermission": "Jotji needs camera access to attach photos to your notes."
         }
       ],
-      "expo-sharing"
+      "expo-sharing",
+      [
+        "expo-share-intent",
+        {
+          "androidIntentFilters": ["text/*", "image/*"]
+        }
+      ]
     ],
     "extra": {
       "eas": {
