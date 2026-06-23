@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Keyboard, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { KeyboardStickyView } from 'react-native-keyboard-controller';
+import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { KeyboardController, KeyboardStickyView } from 'react-native-keyboard-controller';
 import {
   CoreBridge,
   DEFAULT_TOOLBAR_ITEMS,
@@ -303,18 +303,17 @@ function EditorBody({
     await notesRepo.moveToNotebook(noteId, id);
   };
 
-  // Bottom sheets must not open behind the keyboard: blur the editor + dismiss
-  // the keyboard first, then show the sheet.
-  const openNotebookSheet = () => {
+  // Open a bottom sheet only AFTER the keyboard is fully hidden. Opening while
+  // it animates down leaves the panel reflowing, so the first tap inside is
+  // swallowed (Android treats it as a dismiss-keyboard tap). RN's
+  // Keyboard.dismiss() is unreliable under edge-to-edge; KeyboardController
+  // .dismiss() resolves once the keyboard is actually gone.
+  const openSheet = (open: () => void) => {
     editor.blur();
-    Keyboard.dismiss();
-    setNotebookSheetOpen(true);
+    void KeyboardController.dismiss().then(open);
   };
-  const openTagSheet = () => {
-    editor.blur();
-    Keyboard.dismiss();
-    setTagSheetOpen(true);
-  };
+  const openNotebookSheet = () => openSheet(() => setNotebookSheetOpen(true));
+  const openTagSheet = () => openSheet(() => setTagSheetOpen(true));
 
   return (
     <Screen edges={['top', 'left', 'right']}>
