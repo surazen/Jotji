@@ -61,6 +61,8 @@ async function decorate(notes: Note[]): Promise<NoteWithRelations[]> {
   const ids = notes.map((n) => n.id);
 
   const tagRows = await all<TagRow>(
+    // Only generated `?` placeholders are interpolated; the ids are bound params.
+    // eslint-disable-next-line no-restricted-syntax
     `SELECT t.id, t.name, t.created_at, nt.note_id
        FROM note_tags nt
        JOIN tags t ON t.id = nt.tag_id
@@ -76,6 +78,8 @@ async function decorate(notes: Note[]): Promise<NoteWithRelations[]> {
   }
 
   const countRows = await all<{ note_id: string; c: number }>(
+    // Only generated `?` placeholders are interpolated; the ids are bound params.
+    // eslint-disable-next-line no-restricted-syntax
     `SELECT note_id, COUNT(*) AS c
        FROM attachments
       WHERE note_id IN (${placeholders(ids.length)})
@@ -111,6 +115,9 @@ export async function listNotes(opts: ListOptions = {}): Promise<NoteWithRelatio
   const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
   const orderSql = `ORDER BY ${pinnedFirst ? 'is_pinned DESC, ' : ''}${SORT_COLUMNS[sort]}`;
 
+  // whereSql is built only from static fragments (values are bound in `params`)
+  // and orderSql from the SORT_COLUMNS allowlist — no user input is interpolated.
+  // eslint-disable-next-line no-restricted-syntax
   const rows = await all<NoteRow>(`SELECT * FROM notes ${whereSql} ${orderSql}`, params);
   return decorate(rows.map(mapNote));
 }

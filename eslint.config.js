@@ -22,10 +22,20 @@ module.exports = defineConfig([
       'no-restricted-syntax': [
         'warn',
         {
+          // Member-call form: db/tx.execute(`…${x}`) and the repo wrappers used
+          // as members. Only interpolated template literals are dangerous —
+          // static backtick queries (no `${}`) are fine and stay unflagged.
           selector:
-            "CallExpression[callee.property.name=/^(execute|executeSync|executeBatch)$/] > TemplateLiteral",
+            "CallExpression[callee.property.name=/^(execute|executeSync|executeBatch|run|all|first)$/] > TemplateLiteral[expressions.length>0]",
           message:
-            'Do not pass a template literal as SQL. Use a static query string with ? placeholders and a params array.',
+            'Do not interpolate values into SQL. Use a static query string with ? placeholders and a params array.',
+        },
+        {
+          // Direct-call form: the imported run()/all()/first() helpers in repos.
+          selector:
+            "CallExpression[callee.name=/^(run|all|first)$/] > TemplateLiteral[expressions.length>0]",
+          message:
+            'Do not interpolate values into SQL. Use a static query string with ? placeholders and a params array.',
         },
       ],
     },

@@ -52,11 +52,16 @@ const ALLOWED_ATTRS: Record<string, Set<string>> = {
 const SELF_CLOSING = new Set(['br', 'img', 'hr']);
 
 function isSafeUrl(url: string): boolean {
-  const v = url.trim().toLowerCase();
+  // Browsers ignore embedded whitespace/control characters when resolving a URL
+  // scheme, so a value like `java&#9;script:alert(1)` (a literal tab inside
+  // `javascript:`) would slip past a naive prefix check yet still execute. Strip
+  // all control/whitespace chars before testing the protocol. (Entity-encoded
+  // schemes are separately defused by escapeAttr re-escaping `&` on output.)
+  const v = url.replace(/[\u0000-\u0020\u007f-\u00a0]/g, '').toLowerCase();
   if (v.startsWith('javascript:') || v.startsWith('vbscript:')) return false;
   // Allow only image data URIs; block all other data: payloads.
   if (v.startsWith('data:')) {
-    return /^data:image\/(png|jpe?g|gif|webp|bmp);/i.test(url.trim());
+    return /^data:image\/(png|jpe?g|gif|webp|bmp);/i.test(v);
   }
   return true;
 }

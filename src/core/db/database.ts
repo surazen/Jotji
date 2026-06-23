@@ -47,6 +47,8 @@ async function runMigrations(instance: DB): Promise<void> {
       }
     });
     // version is an internal integer, never user input — safe to inline.
+    // PRAGMA values can't be bound parameters, so this is the one allowed spot.
+    // eslint-disable-next-line no-restricted-syntax
     await instance.execute(`PRAGMA user_version = ${migration.version};`);
   }
 

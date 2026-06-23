@@ -21,6 +21,16 @@ describe('sanitizeHtml', () => {
     expect(out).not.toContain('javascript:');
   });
 
+  it('drops javascript: hrefs obfuscated with embedded control characters', () => {
+    // A tab/newline inside the scheme is ignored by browsers when resolving the
+    // URL, so the sanitizer must strip control chars before the protocol check.
+    for (const href of ['java\tscript:alert(1)', 'java\nscript:alert(1)', ' javascript:alert(1)']) {
+      const out = sanitizeHtml(`<a href="${href}">x</a>`);
+      expect(out).toBe('<a>x</a>');
+      expect(out.toLowerCase()).not.toContain('script:');
+    }
+  });
+
   it('keeps safe formatting tags and http links', () => {
     const out = sanitizeHtml('<p><strong>bold</strong> <a href="https://a.com">link</a></p>');
     expect(out).toContain('<strong>');
