@@ -10,7 +10,7 @@ import { AppText } from '@core/components/Text';
 import { toast } from '@core/components/Toast';
 import { canUseAppLock, authenticate } from '@core/security/appLock';
 import { useNotesStore } from '@features/notes/store/notesStore';
-import { pickAndImport } from '@features/notes/utils/importNotes';
+import { IMPORT_TOO_LARGE, pickAndImport } from '@features/notes/utils/importNotes';
 import {
   FONT_FAMILY_LABELS,
   FONT_SCALE_LABELS,
@@ -73,8 +73,12 @@ export function SettingsScreen() {
       toast.success(
         result.imported === 1 ? 'Imported 1 note' : `Imported ${result.imported} notes`,
       );
-    } catch {
-      toast.error('Could not import that file');
+    } catch (e) {
+      toast.error(
+        e instanceof Error && e.message === IMPORT_TOO_LARGE
+          ? 'That file is too large to import (over 50 MB).'
+          : 'Could not import that file',
+      );
     }
   };
 

@@ -16,6 +16,14 @@ import * as tagsRepo from '@core/db/repositories/tagsRepo';
 
 export type ImportResult = { imported: number; source: 'enex' | 'text' };
 
+/** Reject imports larger than this; the whole file is read into memory and
+ * regex-scanned, so an unbounded file could exhaust memory or hang the JS
+ * thread. 50 MB comfortably covers large text/ENEX exports. */
+export const MAX_IMPORT_BYTES = 50 * 1024 * 1024;
+
+/** Thrown when the picked file exceeds MAX_IMPORT_BYTES. */
+export const IMPORT_TOO_LARGE = 'IMPORT_TOO_LARGE';
+
 const ENTITIES: Record<string, string> = {
   '&amp;': '&',
   '&lt;': '<',
@@ -104,7 +112,15 @@ export async function pickAndImport(): Promise<ImportResult | null> {
   if (result.canceled || !result.assets || result.assets.length === 0) return null;
 
   const asset = result.assets[0];
-  const content = await new File(asset.uri).text();
+  if (typeof asset.size === 'number' && asset.size > MAX_IMPORT_BYTES) {
+    throw new Error(IMPORT_TOO_LARGE);
+  }
+  const file = new File(asset.uri);
+  // Guard again on the actual file size in case the picker didn't report one.
+  if (typeof file.size === 'number' && file.size > MAX_IMPORT_BYTES) {
+    throw new Error(IMPORT_TOO_LARGE);
+  }
+  const content = await file.text();
   const name = asset.name ?? 'note';
 
   if (/\.enex$/i.test(name) || content.includes('<en-export')) {

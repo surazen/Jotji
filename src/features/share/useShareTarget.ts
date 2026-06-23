@@ -23,10 +23,16 @@ export function useShareTarget(enabled: boolean): void {
     (async () => {
       try {
         const noteId = await createNoteFromShare(shareIntent);
-        if (noteId && navigationRef.isReady()) {
-          navigationRef.navigate('NoteEditor', { noteId });
-        } else if (!noteId) {
-          toast.error("That couldn't be saved as a note");
+        if (noteId) {
+          if (navigationRef.isReady()) navigationRef.navigate('NoteEditor', { noteId });
+        } else {
+          // Nothing usable: distinguish an unsupported file from an empty share.
+          const hadFiles = (shareIntent.files?.length ?? 0) > 0;
+          toast.error(
+            hadFiles
+              ? 'That file type isn’t supported. Jotji accepts JPEG/PNG images and PDF, Word, or Excel files.'
+              : 'There was nothing to save from that share.',
+          );
         }
       } catch {
         toast.error('Could not import the shared content');
