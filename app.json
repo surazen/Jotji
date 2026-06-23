@@ -21,6 +21,7 @@
     },
     "android": {
       "package": "com.jotji.app",
+      "allowBackup": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#e7825d"

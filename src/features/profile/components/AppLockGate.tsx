@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, type ReactNode } from 'react';
 import { AppState, StyleSheet, View, type AppStateStatus } from 'react-native';
+import * as ScreenCapture from 'expo-screen-capture';
 
 import { Button } from '@core/components/Button';
 import { Icon } from '@core/components/Icon';
@@ -35,6 +36,19 @@ export function AppLockGate({ children }: { children: ReactNode }) {
   // Once settings are known, unlock immediately if lock is disabled.
   useEffect(() => {
     if (hydrated && !enabled) setLocked(false);
+  }, [hydrated, enabled]);
+
+  // While app lock is on, block screenshots/recording and obscure the app's
+  // preview in the recents switcher (FLAG_SECURE). Tied to the lock setting so
+  // users who haven't opted into privacy can still capture their notes.
+  useEffect(() => {
+    if (!hydrated) return;
+    const SCREEN_CAPTURE_TAG = 'jotji-app-lock';
+    if (enabled) {
+      void ScreenCapture.preventScreenCaptureAsync(SCREEN_CAPTURE_TAG);
+    } else {
+      void ScreenCapture.allowScreenCaptureAsync(SCREEN_CAPTURE_TAG);
+    }
   }, [hydrated, enabled]);
 
   // Initial prompt on launch when enabled.
