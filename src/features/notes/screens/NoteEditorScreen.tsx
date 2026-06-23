@@ -349,7 +349,9 @@ function EditorBody({
             onPress={openNotebookSheet}
             style={[
               styles.notebookChip,
-              notebookName
+              // null notebook = the "General" bucket: a subtle outlined chip.
+              // An explicit notebook gets the filled primaryContainer chip.
+              notebookId
                 ? { backgroundColor: theme.colors.primaryContainer }
                 : {
                     backgroundColor: theme.colors.surfaceContainerHigh,
@@ -358,9 +360,9 @@ function EditorBody({
                   },
             ]}
           >
-            <Icon name="book" size={13} color={notebookName ? 'onPrimaryContainer' : 'primary'} />
-            <AppText variant="labelMd" color={notebookName ? 'onPrimaryContainer' : 'primary'}>
-              {notebookName ?? 'Add to notebook'}
+            <Icon name="book" size={13} color={notebookId ? 'onPrimaryContainer' : 'primary'} />
+            <AppText variant="labelMd" color={notebookId ? 'onPrimaryContainer' : 'primary'}>
+              {notebookName ?? 'General'}
             </AppText>
           </Pressable>
         </View>
