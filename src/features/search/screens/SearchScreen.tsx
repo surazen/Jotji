@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardController } from 'react-native-keyboard-controller';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
@@ -62,6 +63,13 @@ export function SearchScreen() {
   const onSelectTag = (tag: TagWithCount) => {
     setQuery('');
     setActiveTag((prev) => (prev?.id === tag.id ? null : tag));
+  };
+
+  // Acting on a result can happen with the search keyboard still up. Opening a
+  // sheet mid-dismiss reflows its panel and swallows the first tap, so wait for
+  // the keyboard to actually hide first (matches the editor; no-op when down).
+  const openMenu = (note: NoteWithRelations) => {
+    void KeyboardController.dismiss().then(() => setMenuNote(note));
   };
 
   const showingResults = query.trim().length > 0 || activeTag !== null;
@@ -138,8 +146,8 @@ export function SearchScreen() {
                 key={note.id}
                 note={note}
                 onPress={() => navigation.navigate('NoteEditor', { noteId: note.id })}
-                onLongPress={() => setMenuNote(note)}
-                onMore={() => setMenuNote(note)}
+                onLongPress={() => openMenu(note)}
+                onMore={() => openMenu(note)}
                 onTogglePin={async () => {
                   await notesRepo.setPinned(note.id, !note.isPinned);
                   await refreshAfterMutation();
