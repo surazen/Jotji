@@ -29,6 +29,7 @@ import { htmlToPlainText } from '@core/security/htmlSanitizer';
 import { isAllowedImageMime } from '@core/utils/files';
 import { useTheme } from '@core/theme/useTheme';
 import { NotebookPicker } from '@features/notebooks/components/NotebookPicker';
+import { useSettingsStore } from '@features/profile/store/settingsStore';
 import { TagInput } from '@features/tags/components/TagInput';
 import type { RootStackParamList } from '@navigation/types';
 
@@ -179,6 +180,20 @@ function EditorBody({
     theme: buildEditorTheme(theme),
   });
   const liveHtml = useEditorContent(editor, { type: 'html' });
+
+  // One-time hint: tapping a link in the editor places the cursor; links open on
+  // long-press. Show it the first time a note that contains a link is opened,
+  // then persist that it's been seen so it never shows again.
+  const linkHintSeen = useSettingsStore((s) => s.linkHintSeen);
+  const markLinkHintSeen = useSettingsStore((s) => s.markLinkHintSeen);
+  const [linkHintVisible, setLinkHintVisible] = useState(false);
+  const hasLink = /<a\b[^>]*\bhref=/i.test(liveHtml ?? initialHtml);
+  useEffect(() => {
+    if (hasLink && !linkHintSeen) {
+      setLinkHintVisible(true);
+      void markLinkHintSeen();
+    }
+  }, [hasLink, linkHintSeen, markLinkHintSeen]);
 
   // Re-theme the WebView content when light/dark (or font size) changes.
   useEffect(() => {
@@ -367,6 +382,23 @@ function EditorBody({
           </Pressable>
         </View>
 
+        {linkHintVisible ? (
+          <View
+            style={[
+              styles.linkHint,
+              { backgroundColor: theme.colors.surfaceContainerHigh, borderRadius: theme.radius.md },
+            ]}
+          >
+            <Icon name="info" size={14} color="onSurfaceVariant" />
+            <AppText variant="labelMd" color="onSurfaceVariant" style={styles.linkHintText}>
+              Long-press a link to open it.
+            </AppText>
+            <Pressable onPress={() => setLinkHintVisible(false)} hitSlop={8}>
+              <Icon name="x" size={14} color="onSurfaceVariant" />
+            </Pressable>
+          </View>
+        ) : null}
+
         <View style={styles.editor}>
           <RichTextEditor editor={editor} />
         </View>
@@ -423,6 +455,16 @@ const styles = StyleSheet.create({
   saveBtn: { paddingHorizontal: 8, paddingVertical: 6 },
   title: { paddingHorizontal: 20, paddingTop: 8, paddingBottom: 4 },
   notebookRow: { flexDirection: 'row', paddingHorizontal: 20, paddingTop: 2, paddingBottom: 10 },
+  linkHint: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginHorizontal: 20,
+    marginBottom: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  linkHintText: { flex: 1 },
   notebookChip: {
     flexDirection: 'row',
     alignItems: 'center',

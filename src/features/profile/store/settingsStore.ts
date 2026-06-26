@@ -16,12 +16,15 @@ type SettingsState = {
   fontFamily: FontFamilyKey;
   fontScale: FontScaleKey;
   appLockEnabled: boolean;
+  /** One-time "long-press a link to open it" hint has been shown. */
+  linkHintSeen: boolean;
 
   hydrate: () => Promise<void>;
   setThemeMode: (mode: ThemeMode) => Promise<void>;
   setFontFamily: (family: FontFamilyKey) => Promise<void>;
   setFontScale: (scale: FontScaleKey) => Promise<void>;
   setAppLockEnabled: (enabled: boolean) => Promise<void>;
+  markLinkHintSeen: () => Promise<void>;
 };
 
 function oneOf<T extends string>(value: string | undefined, allowed: readonly T[], fallback: T): T {
@@ -34,6 +37,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   fontFamily: 'inter',
   fontScale: 'm',
   appLockEnabled: false,
+  linkHintSeen: false,
 
   hydrate: async () => {
     const s = await getAllSettings();
@@ -43,6 +47,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       fontFamily: oneOf(s.fontFamily, fontFamilies, 'inter'),
       fontScale: oneOf(s.fontScale, Object.keys(fontScales) as FontScaleKey[], 'm'),
       appLockEnabled: s.appLockEnabled === 'true',
+      linkHintSeen: s.linkHintSeen === 'true',
     });
   },
 
@@ -61,5 +66,9 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   setAppLockEnabled: async (appLockEnabled) => {
     set({ appLockEnabled });
     await setSetting('appLockEnabled', String(appLockEnabled));
+  },
+  markLinkHintSeen: async () => {
+    set({ linkHintSeen: true });
+    await setSetting('linkHintSeen', 'true');
   },
 }));
