@@ -38,6 +38,7 @@ import { AttachmentStrip } from '../components/AttachmentStrip';
 import { buildEditorCss, buildEditorTheme, injectEditorCss } from '../components/editorTheme';
 import { RichTextEditor } from '../components/RichTextEditor';
 import { pickDocumentFile, pickFromCamera, pickFromGallery } from '../utils/pickImage';
+import { scanDocument } from '@features/scanner/scanDocument';
 import { shareNoteText } from '../utils/shareNote';
 
 type Nav = NativeStackNavigationProp<RootStackParamList, 'NoteEditor'>;
@@ -294,6 +295,21 @@ function EditorBody({
     }
   };
 
+  const addScan = async () => {
+    try {
+      const scan = await scanDocument();
+      if (!scan) return;
+      const created = await attachmentsRepo.addAttachment({
+        noteId,
+        sourceUri: scan.pdfUri,
+        mime: scan.mime,
+      });
+      setAttachments((prev) => [...prev, created]);
+    } catch {
+      toast.error('Could not scan document');
+    }
+  };
+
   const removeAttachment = async (id: string) => {
     await attachmentsRepo.deleteAttachment(id);
     setAttachments((prev) => prev.filter((a) => a.id !== id));
@@ -414,6 +430,7 @@ function EditorBody({
             <AttachmentBar
               onCamera={() => addImage('camera')}
               onGallery={() => addImage('gallery')}
+              onScan={addScan}
               onAttachFile={addFile}
               onTag={openTagSheet}
             />
