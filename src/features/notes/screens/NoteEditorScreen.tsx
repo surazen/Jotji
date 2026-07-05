@@ -305,8 +305,10 @@ function EditorBody({
         mime: scan.mime,
       });
       setAttachments((prev) => [...prev, created]);
-    } catch {
-      toast.error('Could not scan document');
+    } catch (e) {
+      // TEMP (prototype diagnostic): surface the real reason on-device so we don't
+      // need a logcat/rebuild round-trip. Revert to a generic message before merge.
+      toast.error(`Scan failed: ${e instanceof Error ? e.message : String(e)}`);
     }
   };
 

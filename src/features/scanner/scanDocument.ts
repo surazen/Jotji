@@ -49,11 +49,14 @@ export async function scanDocument(): Promise<ScanResult | null> {
     if (pages.length === 0) return null;
 
     const out = new File(Paths.cache, `scan-${newId()}.pdf`);
-    const pdfPath = await createPdf({
+    await createPdf({
       outputPath: out.uri,
       pages: pages.map((img) => ({ imagePath: img.uri, imageFit: 'contain' as const })),
     });
 
-    return { pdfUri: pdfPath, mime: 'application/pdf' };
+    // NB: createPdf resolves with a scheme-stripped path (Uri.getPath()); the rest
+    // of the pipeline (expo-file-system File) needs a file:// URI, so return the
+    // URI of the file we created rather than createPdf's return value.
+    return { pdfUri: out.uri, mime: 'application/pdf' };
   });
 }
