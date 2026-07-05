@@ -64,9 +64,16 @@ export function AttachmentStrip({ attachments, onRemove }: Props) {
                 <Pressable
                   onPress={() => onRemove(a.id)}
                   hitSlop={8}
-                  style={[styles.remove, { backgroundColor: theme.colors.scrim + 'aa' }]}
+                  style={[
+                    styles.remove,
+                    {
+                      backgroundColor: theme.colors.onSurface,
+                      borderColor: theme.colors.surface,
+                      shadowColor: theme.colors.shadow,
+                    },
+                  ]}
                 >
-                  <Icon name="x" size={14} color="onPrimary" />
+                  <Icon name="x" size={16} color="surface" />
                 </Pressable>
               ) : null}
             </View>
@@ -94,10 +101,17 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 4,
     right: 4,
-    width: 22,
-    height: 22,
-    borderRadius: 11,
+    width: 26,
+    height: 26,
+    borderRadius: 13,
     alignItems: 'center',
     justifyContent: 'center',
+    // A surface-coloured halo ring + elevation lift the chip off busy photo
+    // thumbnails; the onSurface/surface fill guarantees contrast in both themes.
+    borderWidth: 1.5,
+    elevation: 3,
+    shadowOpacity: 0.3,
+    shadowRadius: 2,
+    shadowOffset: { width: 0, height: 1 },
   },
 });
