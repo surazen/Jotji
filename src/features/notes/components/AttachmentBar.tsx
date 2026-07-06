@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 
-import { Icon, type IconName } from '@core/components/Icon';
+import { Icon } from '@core/components/Icon';
 import { useTheme } from '@core/theme/useTheme';
 
 type Props = {
@@ -14,23 +15,33 @@ type Props = {
 
 /** Horizontal action row in the editor: Camera, Gallery, Scan, File, Tag. */
 export function AttachmentBar({ onCamera, onGallery, onScan, onAttachFile, onTag }: Props) {
-  const items: { icon: IconName; label: string; onPress: () => void }[] = [
-    { icon: 'camera', label: 'Camera', onPress: onCamera },
-    { icon: 'image', label: 'Gallery', onPress: onGallery },
-    { icon: 'maximize', label: 'Scan', onPress: onScan },
-    { icon: 'paperclip', label: 'File', onPress: onAttachFile },
-    { icon: 'hash', label: 'Tag', onPress: onTag },
+  const theme = useTheme();
+  // Icons render as onSecondaryContainer to sit on the secondaryContainer chip.
+  // Scan uses MaterialIcons' document-scanner (Feather has no scanner glyph); it
+  // matches the Scan tab in the bottom bar.
+  const items: { key: string; icon: ReactNode; onPress: () => void }[] = [
+    { key: 'Camera', icon: <Icon name="camera" color="onSecondaryContainer" size={20} />, onPress: onCamera },
+    { key: 'Gallery', icon: <Icon name="image" color="onSecondaryContainer" size={20} />, onPress: onGallery },
+    {
+      key: 'Scan',
+      icon: <MaterialIcons name="document-scanner" size={20} color={theme.colors.onSecondaryContainer} />,
+      onPress: onScan,
+    },
+    { key: 'File', icon: <Icon name="paperclip" color="onSecondaryContainer" size={20} />, onPress: onAttachFile },
+    { key: 'Tag', icon: <Icon name="hash" color="onSecondaryContainer" size={20} />, onPress: onTag },
   ];
   return (
     <View style={styles.row}>
       {items.map((it) => (
-        <AttachmentButton key={it.label} {...it} />
+        <AttachmentButton key={it.key} onPress={it.onPress}>
+          {it.icon}
+        </AttachmentButton>
       ))}
     </View>
   );
 }
 
-function AttachmentButton({ icon, onPress }: { icon: IconName; label: string; onPress: () => void }) {
+function AttachmentButton({ children, onPress }: { children: ReactNode; onPress: () => void }) {
   const theme = useTheme();
   return (
     <Pressable
@@ -38,7 +49,7 @@ function AttachmentButton({ icon, onPress }: { icon: IconName; label: string; on
       style={[styles.btn, { backgroundColor: theme.colors.secondaryContainer }]}
       android_ripple={{ color: theme.colors.secondary, borderless: true }}
     >
-      <Icon name={icon} color="onSecondaryContainer" size={20} />
+      {children}
     </Pressable>
   );
 }
