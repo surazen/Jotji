@@ -5,6 +5,8 @@ export type AppTabParamList = {
   Search: undefined;
   /** Center action tab — intercepted to open the editor. */
   New: undefined;
+  /** Action tab — intercepted to launch the document scanner. */
+  Scan: undefined;
   Notebooks: undefined;
   Profile: undefined;
 };

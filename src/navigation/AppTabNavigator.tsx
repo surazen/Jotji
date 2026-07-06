@@ -13,6 +13,7 @@ import { NoteListScreen } from '@features/notes/screens/NoteListScreen';
 import { NotebooksScreen } from '@features/notebooks/screens/NotebooksScreen';
 import { ProfileScreen } from '@features/profile/screens/ProfileScreen';
 import { SearchScreen } from '@features/search/screens/SearchScreen';
+import { useStandaloneScan } from '@features/scanner/useStandaloneScan';
 
 import type { AppTabParamList, RootStackParamList } from './types';
 
@@ -27,6 +28,7 @@ const TAB_ICONS: Record<keyof AppTabParamList, IconName> = {
   Home: 'home',
   Search: 'search',
   New: 'plus',
+  Scan: 'maximize',
   Notebooks: 'book',
   Profile: 'user',
 };
@@ -35,8 +37,10 @@ export function AppTabNavigator() {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const rootNav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { startScan, scanSheet } = useStandaloneScan();
 
   return (
+    <>
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
@@ -100,8 +104,20 @@ export function AppTabNavigator() {
           },
         }}
       />
+      <Tab.Screen
+        name="Scan"
+        component={NewNotePlaceholder}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            startScan();
+          },
+        }}
+      />
       <Tab.Screen name="Notebooks" component={NotebooksScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
+    {scanSheet}
+    </>
   );
 }

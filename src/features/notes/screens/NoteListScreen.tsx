@@ -11,13 +11,9 @@ import { Icon } from '@core/components/Icon';
 import { Screen } from '@core/components/Screen';
 import { NoteCardSkeleton } from '@core/components/Skeleton';
 import { AppText } from '@core/components/Text';
-import { toast } from '@core/components/Toast';
 import { PressableScale } from '@core/components/PressableScale';
-import * as attachmentsRepo from '@core/db/repositories/attachmentsRepo';
 import * as notesRepo from '@core/db/repositories/notesRepo';
 import type { NoteWithRelations } from '@core/db/types';
-import { scanDocument } from '@features/scanner/scanDocument';
-import { savePdfToDevice, sharePdf } from '@features/scanner/scanActions';
 import { greeting } from '@core/utils/dates';
 import { useResponsive } from '@core/utils/useResponsive';
 import { useTheme } from '@core/theme/useTheme';
@@ -41,7 +37,6 @@ export function NoteListScreen() {
   const { notes, pinned, loading, load, togglePin, deleteNote } = useNotesStore();
   const [menuNote, setMenuNote] = useState<NoteWithRelations | null>(null);
   const [moveNote, setMoveNote] = useState<NoteWithRelations | null>(null);
-  const [scanUri, setScanUri] = useState<string | null>(null);
   const [showGreeting, setShowGreeting] = useState(!greetingConsumed);
 
   useFocusEffect(
@@ -58,24 +53,6 @@ export function NoteListScreen() {
   );
 
   const openNote = (id: string) => navigation.navigate('NoteEditor', { noteId: id });
-
-  // Standalone scan (from the FAB): capture a PDF, then offer share / save /
-  // attach via a bottom sheet. Reuses the same scanDocument() adapter the editor
-  // uses, so nothing scanner-specific is duplicated here.
-  const startScan = async () => {
-    const scan = await scanDocument();
-    if (scan) setScanUri(scan.pdfUri);
-  };
-
-  const attachScanToNote = async (uri: string) => {
-    try {
-      const note = await notesRepo.createNote({});
-      await attachmentsRepo.addAttachment({ noteId: note.id, sourceUri: uri, mime: 'application/pdf' });
-      navigation.navigate('NoteEditor', { noteId: note.id });
-    } catch {
-      toast.error('Could not create a note from the scan');
-    }
-  };
 
   const menuActions: ContextAction[] = menuNote
     ? [
@@ -154,23 +131,7 @@ export function NoteListScreen() {
             label: 'Photo note',
             onPress: () => navigation.navigate('NoteEditor'),
           },
-          { icon: 'maximize', label: 'Scan document', onPress: startScan },
         ]}
-      />
-
-      <ContextMenu
-        visible={!!scanUri}
-        onClose={() => setScanUri(null)}
-        title="Scanned document"
-        actions={
-          scanUri
-            ? [
-                { icon: 'share-2', label: 'Share', onPress: () => sharePdf(scanUri) },
-                { icon: 'download', label: 'Save to device', onPress: () => savePdfToDevice(scanUri) },
-                { icon: 'file-plus', label: 'Attach to a note', onPress: () => attachScanToNote(scanUri) },
-              ]
-            : []
-        }
       />
 
       <ContextMenu
