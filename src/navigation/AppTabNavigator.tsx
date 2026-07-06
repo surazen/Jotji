@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
-import { Feather } from '@expo/vector-icons';
+import { Feather, MaterialIcons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -87,6 +87,10 @@ export function AppTabNavigator() {
                 <Icon name="plus" color="onPrimary" size={24} />
               </View>
             );
+          }
+          // Feather has no document-scanner glyph; use the Material standard for Scan.
+          if (route.name === 'Scan') {
+            return <MaterialIcons name="document-scanner" size={focused ? 25 : 23} color={color} />;
           }
           return <Feather name={name} size={focused ? 25 : 23} color={color} />;
         },
