@@ -12,7 +12,6 @@ import { useTheme } from '@core/theme/useTheme';
 import { NoteListScreen } from '@features/notes/screens/NoteListScreen';
 import { NotebooksScreen } from '@features/notebooks/screens/NotebooksScreen';
 import { ProfileScreen } from '@features/profile/screens/ProfileScreen';
-import { SearchScreen } from '@features/search/screens/SearchScreen';
 import { useStandaloneScan } from '@features/scanner/useStandaloneScan';
 
 import type { AppTabParamList, RootStackParamList } from './types';
@@ -26,9 +25,8 @@ function NewNotePlaceholder() {
 
 const TAB_ICONS: Record<keyof AppTabParamList, IconName> = {
   Home: 'home',
-  Search: 'search',
+  Scan: 'maximize', // overridden below with MaterialIcons document-scanner
   New: 'plus',
-  Scan: 'maximize',
   Notebooks: 'book',
   Profile: 'user',
 };
@@ -97,17 +95,6 @@ export function AppTabNavigator() {
       })}
     >
       <Tab.Screen name="Home" component={NoteListScreen} />
-      <Tab.Screen name="Search" component={SearchScreen} />
-      <Tab.Screen
-        name="New"
-        component={NewNotePlaceholder}
-        listeners={{
-          tabPress: (e) => {
-            e.preventDefault();
-            rootNav.navigate('NoteEditor');
-          },
-        }}
-      />
       <Tab.Screen
         name="Scan"
         component={NewNotePlaceholder}
@@ -115,6 +102,16 @@ export function AppTabNavigator() {
           tabPress: (e) => {
             e.preventDefault();
             startScan();
+          },
+        }}
+      />
+      <Tab.Screen
+        name="New"
+        component={NewNotePlaceholder}
+        listeners={{
+          tabPress: (e) => {
+            e.preventDefault();
+            rootNav.navigate('NoteEditor');
           },
         }}
       />

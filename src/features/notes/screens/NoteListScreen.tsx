@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -81,6 +81,16 @@ export function NoteListScreen() {
   return (
     <Screen>
       <View style={[styles.content, { maxWidth: contentMaxWidth }]}>
+        <View style={styles.topBar}>
+          <Pressable
+            onPress={() => navigation.navigate('Search')}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Search"
+          >
+            <Icon name="search" size={24} color="onSurface" />
+          </Pressable>
+        </View>
         <FlashList
           data={notes}
           keyExtractor={(item) => item.id}
@@ -218,6 +228,7 @@ function ListHeader({
 
 const styles = StyleSheet.create({
   content: { flex: 1, width: '100%', alignSelf: 'center' },
+  topBar: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 24, paddingTop: 8, paddingBottom: 4 },
   listContent: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 120 },
   header: { marginTop: 8, marginBottom: 8, gap: 4 },
   pinnedSection: { marginTop: 12, marginBottom: 8 },

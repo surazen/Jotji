@@ -2,17 +2,18 @@ import type { NavigatorScreenParams } from '@react-navigation/native';
 
 export type AppTabParamList = {
   Home: undefined;
-  Search: undefined;
-  /** Center action tab — intercepted to open the editor. */
-  New: undefined;
   /** Action tab — intercepted to launch the document scanner. */
   Scan: undefined;
+  /** Center action tab — intercepted to open the editor. */
+  New: undefined;
   Notebooks: undefined;
   Profile: undefined;
 };
 
 export type RootStackParamList = {
   Tabs: NavigatorScreenParams<AppTabParamList> | undefined;
+  /** Full-text / tag search — pushed from the Home top-bar search icon. */
+  Search: undefined;
   /** noteId omitted = create a new note (optionally inside notebookId). */
   NoteEditor: { noteId?: string; notebookId?: string } | undefined;
   /** notebookId null = the virtual "General" bucket (unfiled notes). */

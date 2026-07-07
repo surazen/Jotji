@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { KeyboardController } from 'react-native-keyboard-controller';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ContextMenu, type ContextAction } from '@core/components/ContextMenu';
 import { EmptyState } from '@core/components/EmptyState';
+import { Icon } from '@core/components/Icon';
 import { Screen } from '@core/components/Screen';
 import { AppText } from '@core/components/Text';
 import * as notesRepo from '@core/db/repositories/notesRepo';
@@ -117,7 +118,17 @@ export function SearchScreen() {
     <Screen>
       <View style={[styles.content, { maxWidth: contentMaxWidth }]}>
         <View style={styles.searchWrap}>
-          <SearchBar value={query} onChangeText={setQuery} />
+          <Pressable
+            onPress={() => navigation.goBack()}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+          >
+            <Icon name="arrow-left" size={24} color="onSurface" />
+          </Pressable>
+          <View style={styles.searchField}>
+            <SearchBar value={query} onChangeText={setQuery} autoFocus />
+          </View>
         </View>
 
         {!showingResults ? (
@@ -187,7 +198,8 @@ export function SearchScreen() {
 
 const styles = StyleSheet.create({
   content: { flex: 1, width: '100%', alignSelf: 'center', paddingHorizontal: 24 },
-  searchWrap: { paddingTop: 8, paddingBottom: 12 },
+  searchWrap: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingTop: 8, paddingBottom: 12 },
+  searchField: { flex: 1 },
   idle: { gap: 16, paddingTop: 8, paddingBottom: 110 },
   heading: { marginBottom: 4 },
   hint: { marginTop: 4 },
