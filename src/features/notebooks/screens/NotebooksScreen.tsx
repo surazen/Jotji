@@ -73,13 +73,23 @@ export function NotebooksScreen() {
               Organize your archive.
             </AppText>
           </View>
-          <Pressable
-            onPress={() => setCreateOpen(true)}
-            accessibilityLabel="New notebook"
-            style={[styles.addBtn, { backgroundColor: theme.colors.primaryContainer }]}
-          >
-            <Icon name="plus" color="onPrimaryContainer" />
-          </Pressable>
+          <View style={styles.headerActions}>
+            <Pressable
+              onPress={() => navigation.navigate('Search')}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel="Search"
+            >
+              <Icon name="search" size={24} color="onSurface" />
+            </Pressable>
+            <Pressable
+              onPress={() => setCreateOpen(true)}
+              accessibilityLabel="New notebook"
+              style={[styles.addBtn, { backgroundColor: theme.colors.primaryContainer }]}
+            >
+              <Icon name="plus" color="onPrimaryContainer" />
+            </Pressable>
+          </View>
         </View>
 
         <FlashList
@@ -149,6 +159,7 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     paddingBottom: 12,
   },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: 16 },
   addBtn: { width: 48, height: 48, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   list: { paddingHorizontal: 18, paddingBottom: 110 },
   cell: { flex: 1, padding: 6 },
