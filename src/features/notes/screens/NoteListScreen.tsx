@@ -6,7 +6,6 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { ContextMenu, type ContextAction } from '@core/components/ContextMenu';
 import { EmptyState } from '@core/components/EmptyState';
-import { FAB } from '@core/components/FAB';
 import { Icon } from '@core/components/Icon';
 import { Screen } from '@core/components/Screen';
 import { NoteCardSkeleton } from '@core/components/Skeleton';
@@ -132,17 +131,6 @@ export function NoteListScreen() {
           )}
         />
       </View>
-
-      <FAB
-        actions={[
-          { icon: 'edit-3', label: 'Text note', onPress: () => navigation.navigate('NoteEditor') },
-          {
-            icon: 'image',
-            label: 'Photo note',
-            onPress: () => navigation.navigate('NoteEditor'),
-          },
-        ]}
-      />
 
       <ContextMenu
         visible={!!menuNote}
