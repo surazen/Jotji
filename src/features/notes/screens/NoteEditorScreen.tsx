@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { KeyboardController, KeyboardStickyView } from 'react-native-keyboard-controller';
+import { KeyboardController, KeyboardEvents, KeyboardStickyView } from 'react-native-keyboard-controller';
 import {
   CoreBridge,
   DEFAULT_TOOLBAR_ITEMS,
@@ -334,14 +334,32 @@ function EditorBody({
     await notesRepo.moveToNotebook(noteId, id);
   };
 
-  // Open a bottom sheet only AFTER the keyboard is fully hidden. Opening while
-  // it animates down leaves the panel reflowing, so the first tap inside is
-  // swallowed (Android treats it as a dismiss-keyboard tap). RN's
-  // Keyboard.dismiss() is unreliable under edge-to-edge; KeyboardController
-  // .dismiss() resolves once the keyboard is actually gone.
+  // Open a bottom sheet only AFTER the keyboard has FULLY hidden. Opening while
+  // it animates down leaves the sheet's keyboard-tracking panel reflowing, so
+  // taps inside land on a moving target and Android routes them as a
+  // dismiss-keyboard tap — the picker looks "frozen" and nothing selects.
+  // The editor is a TenTap WebView: its keyboard's dismissal resolves a few
+  // frames early, so we can't rely on `dismiss()`'s promise (that was enough for
+  // native inputs, not the WebView). Wait for the `keyboardDidHide` event
+  // instead, with a timeout fallback in case the WebView never emits it, and
+  // open immediately when no keyboard is up (e.g. existing notes — no autofocus).
   const openSheet = (open: () => void) => {
     editor.blur();
-    void KeyboardController.dismiss().then(open);
+    if (!KeyboardController.isVisible()) {
+      open();
+      return;
+    }
+    let opened = false;
+    const openOnce = () => {
+      if (opened) return;
+      opened = true;
+      sub.remove();
+      clearTimeout(timer);
+      open();
+    };
+    const sub = KeyboardEvents.addListener('keyboardDidHide', openOnce);
+    const timer = setTimeout(openOnce, 500);
+    void KeyboardController.dismiss();
   };
   const openNotebookSheet = () => openSheet(() => setNotebookSheetOpen(true));
   const openTagSheet = () => openSheet(() => setTagSheetOpen(true));
