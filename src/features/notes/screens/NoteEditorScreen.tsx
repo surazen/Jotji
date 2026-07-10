@@ -444,7 +444,13 @@ function EditorBody({
           </View>
         ) : null}
 
-        <View style={styles.editor}>
+        {/* Hide the editor WebView while a bottom sheet is open. On Android the
+            WebView's native surface can swallow touches within its bounds even
+            when an overlay is drawn on top (worst on its first load, hence the
+            first-note-after-launch freeze). Collapsing it out of layout removes
+            the overlap so the sheet's rows are tappable. The WebView stays
+            mounted (display:none), so editor content is preserved. */}
+        <View style={[styles.editor, (notebookSheetOpen || tagSheetOpen) && styles.hidden]}>
           <RichTextEditor editor={editor} />
         </View>
 
@@ -521,6 +527,7 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   editor: { flex: 1, paddingHorizontal: 12 },
+  hidden: { display: 'none' },
   bottomBar: {
     flexDirection: 'row',
     alignItems: 'center',

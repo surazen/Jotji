@@ -123,7 +123,12 @@ export function NotebookPicker({ visible, onClose, onSelect, selectedId }: Noteb
           {rows.map((row) => (
             <Pressable
               key={row.id ?? 'none'}
-              onPress={() => choose(row.id)}
+              onPress={() => {
+                // TEMP diagnostic: confirms the row tap actually reaches the
+                // Pressable (vs. being swallowed by the editor WebView surface).
+                toast.info(`tap ${row.name}`);
+                choose(row.id);
+              }}
               android_ripple={{ color: theme.colors.surfaceContainerHigh }}
               style={[styles.row, { borderRadius: theme.radius.md }]}
             >
