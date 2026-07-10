@@ -338,28 +338,39 @@ function EditorBody({
   // it animates down leaves the sheet's keyboard-tracking panel reflowing, so
   // taps inside land on a moving target and Android routes them as a
   // dismiss-keyboard tap — the picker looks "frozen" and nothing selects.
-  // The editor is a TenTap WebView: its keyboard's dismissal resolves a few
-  // frames early, so we can't rely on `dismiss()`'s promise (that was enough for
-  // native inputs, not the WebView). Wait for the `keyboardDidHide` event
-  // instead, with a timeout fallback in case the WebView never emits it, and
-  // open immediately when no keyboard is up (e.g. existing notes — no autofocus).
+  //
+  // The editor is a TenTap WebView. On the FIRST note after a cold launch the
+  // keyboard-controller native module reads stale (isVisible() can be wrong and
+  // events can be missed), which is why a naive dismiss()/isVisible() guard let
+  // the sheet open too early only that once. The reliable ground truth is the
+  // editor's own focus (the user was just typing), so treat the keyboard as
+  // "engaged" if the editor is focused OR the controller says visible, and open
+  // only once BOTH agree it's gone — via keyboardDidHide AND a poll (resilient
+  // to a missed event), capped by a hard timeout. Existing notes (editor not
+  // focused, no keyboard) still open instantly.
   const openSheet = (open: () => void) => {
     editor.blur();
-    if (!KeyboardController.isVisible()) {
+    void KeyboardController.dismiss();
+    const keyboardEngaged = () =>
+      editor.getEditorState().isFocused || KeyboardController.isVisible();
+    if (!keyboardEngaged()) {
       open();
       return;
     }
     let opened = false;
-    const openOnce = () => {
+    const finish = () => {
       if (opened) return;
       opened = true;
       sub.remove();
-      clearTimeout(timer);
+      clearInterval(poll);
+      clearTimeout(hardStop);
       open();
     };
-    const sub = KeyboardEvents.addListener('keyboardDidHide', openOnce);
-    const timer = setTimeout(openOnce, 500);
-    void KeyboardController.dismiss();
+    const sub = KeyboardEvents.addListener('keyboardDidHide', finish);
+    const poll = setInterval(() => {
+      if (!keyboardEngaged()) finish();
+    }, 60);
+    const hardStop = setTimeout(finish, 1500);
   };
   const openNotebookSheet = () => openSheet(() => setNotebookSheetOpen(true));
   const openTagSheet = () => openSheet(() => setTagSheetOpen(true));
