@@ -82,6 +82,14 @@ export function NoteListScreen() {
       <View style={[styles.content, { maxWidth: contentMaxWidth }]}>
         <View style={styles.topBar}>
           <Pressable
+            onPress={() => navigation.navigate('ScannedFiles')}
+            hitSlop={10}
+            accessibilityRole="button"
+            accessibilityLabel="Scanned files"
+          >
+            <Icon name="folder" size={24} color="onSurface" />
+          </Pressable>
+          <Pressable
             onPress={() => navigation.navigate('Search')}
             hitSlop={10}
             accessibilityRole="button"
@@ -216,7 +224,7 @@ function ListHeader({
 
 const styles = StyleSheet.create({
   content: { flex: 1, width: '100%', alignSelf: 'center' },
-  topBar: { flexDirection: 'row', justifyContent: 'flex-end', paddingHorizontal: 24, paddingTop: 8, paddingBottom: 4 },
+  topBar: { flexDirection: 'row', justifyContent: 'flex-end', gap: 20, paddingHorizontal: 24, paddingTop: 8, paddingBottom: 4 },
   listContent: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 120 },
   header: { marginTop: 8, marginBottom: 8, gap: 4 },
   pinnedSection: { marginTop: 12, marginBottom: 8 },

@@ -12,6 +12,7 @@ import { ContextMenu } from '@core/components/ContextMenu';
 import { toast } from '@core/components/Toast';
 import * as attachmentsRepo from '@core/db/repositories/attachmentsRepo';
 import * as notesRepo from '@core/db/repositories/notesRepo';
+import * as scannedFilesRepo from '@core/db/repositories/scannedFilesRepo';
 import type { RootStackParamList } from '@navigation/types';
 
 import { savePdfToDevice, sharePdf } from './scanActions';
@@ -25,7 +26,15 @@ export function useStandaloneScan(): { startScan: () => void; scanSheet: React.R
 
   const startScan = useCallback(async () => {
     const scan = await scanDocument();
-    if (scan) setScanUri(scan.pdfUri);
+    if (!scan) return;
+    try {
+      // Every standalone scan is auto-kept in the device-local scan library;
+      // the post-scan actions then operate on the saved copy.
+      const saved = await scannedFilesRepo.addScannedFile(scan.pdfUri);
+      setScanUri(saved.localUri);
+    } catch {
+      toast.error('Could not save the scan');
+    }
   }, []);
 
   const attachToNote = useCallback(

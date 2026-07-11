@@ -14,6 +14,8 @@ export type RootStackParamList = {
   Tabs: NavigatorScreenParams<AppTabParamList> | undefined;
   /** Full-text / tag search — pushed from the Home top-bar search icon. */
   Search: undefined;
+  /** Device-local library of standalone scans — pushed from the top-bar icon. */
+  ScannedFiles: undefined;
   /** noteId omitted = create a new note (optionally inside notebookId). */
   NoteEditor: { noteId?: string; notebookId?: string } | undefined;
   /** notebookId null = the virtual "General" bucket (unfiled notes). */

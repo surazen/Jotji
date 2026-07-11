@@ -41,6 +41,15 @@ export type Attachment = {
   createdAt: number;
 };
 
+/** A standalone scanned PDF kept in the device-local scan library. */
+export type ScannedFile = {
+  id: string;
+  filename: string;
+  localUri: string;
+  size: number | null;
+  createdAt: number;
+};
+
 export type Profile = {
   name: string;
   avatarUri: string | null;

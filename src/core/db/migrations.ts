@@ -107,6 +107,22 @@ export const MIGRATIONS: Migration[] = [
       END;`,
     ],
   },
+  {
+    version: 2,
+    statements: [
+      // Standalone scans (from the Scan tab) are auto-kept in a device-local
+      // library, independent of notes. Files live in the app sandbox (scans/);
+      // this table is the index over them.
+      `CREATE TABLE scanned_files (
+        id TEXT PRIMARY KEY NOT NULL,
+        filename TEXT NOT NULL,
+        local_uri TEXT NOT NULL,
+        size INTEGER,
+        created_at INTEGER NOT NULL
+      );`,
+      `CREATE INDEX idx_scanned_files_created ON scanned_files(created_at DESC);`,
+    ],
+  },
 ];
 
 export const LATEST_VERSION = MIGRATIONS[MIGRATIONS.length - 1].version;

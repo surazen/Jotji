@@ -9,6 +9,7 @@
 import { Directory, File, Paths } from 'expo-file-system';
 
 const ATTACH_DIRNAME = 'attachments';
+const SCANS_DIRNAME = 'scans';
 
 export type MediaKind = 'image' | 'file';
 
@@ -79,6 +80,24 @@ export function persistToSandbox(
   const src = new File(sourceUri);
   const ext = src.extension || extFor(sourceUri, mime);
   const dest = new File(dir, `${id}${ext}`);
+  src.copySync(dest);
+  return { uri: dest.uri, size: dest.size ?? null };
+}
+
+function scansDir(): Directory {
+  const dir = new Directory(Paths.document, SCANS_DIRNAME);
+  if (!dir.exists) dir.create({ intermediates: true });
+  return dir;
+}
+
+/**
+ * Copy a scanned PDF (produced in the cache) into the permanent scan library
+ * sandbox. Returns its stored URI and byte size.
+ */
+export function persistScanToSandbox(sourceUri: string, id: string): { uri: string; size: number | null } {
+  const dir = scansDir();
+  const src = new File(sourceUri);
+  const dest = new File(dir, `${id}.pdf`);
   src.copySync(dest);
   return { uri: dest.uri, size: dest.size ?? null };
 }
