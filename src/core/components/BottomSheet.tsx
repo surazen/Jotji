@@ -1,6 +1,10 @@
 import React, { useEffect, useState, type ReactNode } from 'react';
-import { BackHandler, Pressable, StyleSheet, View } from 'react-native';
-import Animated, { SlideInDown, SlideOutDown, useAnimatedStyle } from 'react-native-reanimated';
+import { BackHandler, LayoutChangeEvent, Pressable, StyleSheet, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from 'react-native-reanimated';
 import { useReanimatedKeyboardAnimation } from 'react-native-keyboard-controller';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -22,6 +26,13 @@ type BottomSheetProps = {
  * (surfaceContainerLow) defines the panel. It lifts above the keyboard using
  * keyboard-controller's animated height (RN's keyboard events don't fire under
  * Android edge-to-edge). Hardware back and scrim taps close it.
+ *
+ * The panel slides with a manual `translateY` (a shared value + withTiming) and
+ * NOT Reanimated's `entering`/`exiting` layout animations: on Android the first
+ * layout animation after a cold launch leaves the animated view's touch region
+ * unregistered, so the very first sheet opened per launch was visible but
+ * tap-dead (the notebook picker "froze"). A plain useAnimatedStyle transform
+ * doesn't have that problem.
  */
 export function BottomSheet({ visible, onClose, title, children }: BottomSheetProps) {
   const theme = useTheme();
@@ -30,15 +41,21 @@ export function BottomSheet({ visible, onClose, title, children }: BottomSheetPr
   const { height: keyboardHeight } = useReanimatedKeyboardAnimation();
   // Stay mounted briefly after closing so the slide-out animation can play.
   const [rendered, setRendered] = useState(visible);
+  // 0 = fully closed (slid down), 1 = fully open. Drives the slide + scrim fade.
+  const progress = useSharedValue(0);
+  // Measured panel height, so the closed state slides fully off-screen.
+  const panelHeight = useSharedValue(0);
 
   useEffect(() => {
     if (visible) {
       setRendered(true);
+      progress.value = withTiming(1, { duration: 220 });
       return;
     }
+    progress.value = withTiming(0, { duration: 200 });
     const t = setTimeout(() => setRendered(false), 220);
     return () => clearTimeout(t);
-  }, [visible]);
+  }, [visible, progress]);
 
   useEffect(() => {
     if (!visible) return;
@@ -49,44 +66,49 @@ export function BottomSheet({ visible, onClose, title, children }: BottomSheetPr
     return () => back.remove();
   }, [visible, onClose]);
 
-  // Pad the panel above the keyboard (or the bottom inset when it's down).
-  const panelPadding = useAnimatedStyle(() => ({
+  const onPanelLayout = (e: LayoutChangeEvent) => {
+    panelHeight.value = e.nativeEvent.layout.height;
+  };
+
+  // Slide up from below by the panel's own height, and pad above the keyboard
+  // (or the bottom inset when it's down).
+  const panelStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: (1 - progress.value) * (panelHeight.value || 400) }],
     paddingBottom: Math.max(-keyboardHeight.value, insets.bottom) + 16,
   }));
+
+  // Fade the dim scrim in to ~40% (matches the old `scrim + '66'`).
+  const scrimStyle = useAnimatedStyle(() => ({ opacity: progress.value * 0.4 }));
 
   if (!rendered) return null;
 
   return (
     <Portal>
       <View style={styles.fill} pointerEvents={visible ? 'auto' : 'none'}>
-        <Pressable
-          style={[styles.scrim, { backgroundColor: theme.colors.scrim + '66', opacity: visible ? 1 : 0 }]}
-          onPress={onClose}
-        />
+        <Animated.View style={[styles.scrim, { backgroundColor: theme.colors.scrim }, scrimStyle]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+        </Animated.View>
         <View style={styles.anchor} pointerEvents="box-none">
-          {visible ? (
-            <Animated.View
-              entering={SlideInDown}
-              exiting={SlideOutDown}
-              style={[
-                styles.panel,
-                {
-                  backgroundColor: theme.colors.surfaceContainerLow,
-                  borderTopLeftRadius: theme.radius.xl,
-                  borderTopRightRadius: theme.radius.xl,
-                },
-                panelPadding,
-              ]}
-            >
-              <View style={[styles.grabber, { backgroundColor: theme.colors.surfaceContainerHighest }]} />
-              {title ? (
-                <AppText variant="titleMd" style={styles.title}>
-                  {title}
-                </AppText>
-              ) : null}
-              {children}
-            </Animated.View>
-          ) : null}
+          <Animated.View
+            onLayout={onPanelLayout}
+            style={[
+              styles.panel,
+              {
+                backgroundColor: theme.colors.surfaceContainerLow,
+                borderTopLeftRadius: theme.radius.xl,
+                borderTopRightRadius: theme.radius.xl,
+              },
+              panelStyle,
+            ]}
+          >
+            <View style={[styles.grabber, { backgroundColor: theme.colors.surfaceContainerHighest }]} />
+            {title ? (
+              <AppText variant="titleMd" style={styles.title}>
+                {title}
+              </AppText>
+            ) : null}
+            {children}
+          </Animated.View>
         </View>
       </View>
     </Portal>

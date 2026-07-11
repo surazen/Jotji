@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { KeyboardController, KeyboardEvents, KeyboardStickyView } from 'react-native-keyboard-controller';
+import { KeyboardController, KeyboardStickyView } from 'react-native-keyboard-controller';
 import {
   CoreBridge,
   DEFAULT_TOOLBAR_ITEMS,
@@ -334,43 +334,13 @@ function EditorBody({
     await notesRepo.moveToNotebook(noteId, id);
   };
 
-  // Open a bottom sheet only AFTER the keyboard has FULLY hidden. Opening while
-  // it animates down leaves the sheet's keyboard-tracking panel reflowing, so
-  // taps inside land on a moving target and Android routes them as a
-  // dismiss-keyboard tap — the picker looks "frozen" and nothing selects.
-  //
-  // The editor is a TenTap WebView. On the FIRST note after a cold launch the
-  // keyboard-controller native module reads stale (isVisible() can be wrong and
-  // events can be missed), which is why a naive dismiss()/isVisible() guard let
-  // the sheet open too early only that once. The reliable ground truth is the
-  // editor's own focus (the user was just typing), so treat the keyboard as
-  // "engaged" if the editor is focused OR the controller says visible, and open
-  // only once BOTH agree it's gone — via keyboardDidHide AND a poll (resilient
-  // to a missed event), capped by a hard timeout. Existing notes (editor not
-  // focused, no keyboard) still open instantly.
+  // Dismiss the keyboard before opening a bottom sheet so its panel isn't
+  // reflowing above the keyboard as it opens. (The first-sheet-after-launch
+  // freeze was NOT a keyboard issue — see BottomSheet.tsx — but dismissing keeps
+  // the open clean when the user was typing.)
   const openSheet = (open: () => void) => {
     editor.blur();
-    void KeyboardController.dismiss();
-    const keyboardEngaged = () =>
-      editor.getEditorState().isFocused || KeyboardController.isVisible();
-    if (!keyboardEngaged()) {
-      open();
-      return;
-    }
-    let opened = false;
-    const finish = () => {
-      if (opened) return;
-      opened = true;
-      sub.remove();
-      clearInterval(poll);
-      clearTimeout(hardStop);
-      open();
-    };
-    const sub = KeyboardEvents.addListener('keyboardDidHide', finish);
-    const poll = setInterval(() => {
-      if (!keyboardEngaged()) finish();
-    }, 60);
-    const hardStop = setTimeout(finish, 1500);
+    void KeyboardController.dismiss().then(open);
   };
   const openNotebookSheet = () => openSheet(() => setNotebookSheetOpen(true));
   const openTagSheet = () => openSheet(() => setTagSheetOpen(true));
@@ -444,13 +414,7 @@ function EditorBody({
           </View>
         ) : null}
 
-        {/* Hide the editor WebView while a bottom sheet is open. On Android the
-            WebView's native surface can swallow touches within its bounds even
-            when an overlay is drawn on top (worst on its first load, hence the
-            first-note-after-launch freeze). Collapsing it out of layout removes
-            the overlap so the sheet's rows are tappable. The WebView stays
-            mounted (display:none), so editor content is preserved. */}
-        <View style={[styles.editor, (notebookSheetOpen || tagSheetOpen) && styles.hidden]}>
+        <View style={styles.editor}>
           <RichTextEditor editor={editor} />
         </View>
 
@@ -527,7 +491,6 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   editor: { flex: 1, paddingHorizontal: 12 },
-  hidden: { display: 'none' },
   bottomBar: {
     flexDirection: 'row',
     alignItems: 'center',
