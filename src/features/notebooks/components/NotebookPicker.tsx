@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { BottomSheet } from '@core/components/BottomSheet';
 import { Button } from '@core/components/Button';
@@ -23,6 +23,7 @@ type NotebookPickerProps = {
 /** Bottom sheet to move a note into a notebook, with inline "new notebook". */
 export function NotebookPicker({ visible, onClose, onSelect, selectedId }: NotebookPickerProps) {
   const theme = useTheme();
+  const { height: screenHeight } = useWindowDimensions();
   const { notebooks, load, create } = useNotebooksStore();
 
   const [mode, setMode] = useState<'list' | 'create'>('list');
@@ -120,25 +121,33 @@ export function NotebookPicker({ visible, onClose, onSelect, selectedId }: Noteb
             </AppText>
           </Pressable>
 
-          {rows.map((row) => (
-            <Pressable
-              key={row.id ?? 'none'}
-              onPress={() => choose(row.id)}
-              android_ripple={{ color: theme.colors.surfaceContainerHigh }}
-              style={[styles.row, { borderRadius: theme.radius.md }]}
-            >
-              <View
-                style={[
-                  styles.dot,
-                  { backgroundColor: row.color ?? theme.colors.surfaceContainerHighest },
-                ]}
-              />
-              <AppText variant="bodyLg" style={styles.name}>
-                {row.name}
-              </AppText>
-              {selectedId === row.id ? <Icon name="check" color="primary" /> : null}
-            </Pressable>
-          ))}
+          {/* Cap the scrollable notebook list so the sheet never grows past
+              ~half the screen; "New notebook" above stays pinned/reachable. */}
+          <ScrollView
+            style={{ maxHeight: Math.round(screenHeight * 0.45) }}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator
+          >
+            {rows.map((row) => (
+              <Pressable
+                key={row.id ?? 'none'}
+                onPress={() => choose(row.id)}
+                android_ripple={{ color: theme.colors.surfaceContainerHigh }}
+                style={[styles.row, { borderRadius: theme.radius.md }]}
+              >
+                <View
+                  style={[
+                    styles.dot,
+                    { backgroundColor: row.color ?? theme.colors.surfaceContainerHighest },
+                  ]}
+                />
+                <AppText variant="bodyLg" style={styles.name}>
+                  {row.name}
+                </AppText>
+                {selectedId === row.id ? <Icon name="check" color="primary" /> : null}
+              </Pressable>
+            ))}
+          </ScrollView>
         </View>
       )}
     </BottomSheet>
@@ -147,6 +156,7 @@ export function NotebookPicker({ visible, onClose, onSelect, selectedId }: Noteb
 
 const styles = StyleSheet.create({
   list: { gap: 2 },
+  scrollContent: { gap: 2 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 14, paddingHorizontal: 8 },
   dot: { width: 18, height: 18, borderRadius: 9 },
   addDot: { borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
