@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ContextMenu, type ContextAction } from '@core/components/ContextMenu';
 import { EmptyState } from '@core/components/EmptyState';
 import { Icon } from '@core/components/Icon';
+import { PdfViewer } from '@core/components/PdfViewer';
 import { Screen } from '@core/components/Screen';
 import { StackHeader } from '@core/components/StackHeader';
 import { AppText } from '@core/components/Text';
@@ -17,6 +18,7 @@ import type { ScannedFile } from '@core/db/types';
 import { useResponsive } from '@core/utils/useResponsive';
 import { useTheme } from '@core/theme/useTheme';
 import { NotePicker } from '@features/notes/components/NotePicker';
+import { RenameScanSheet } from '@features/scanner/components/RenameScanSheet';
 import { savePdfToDevice, sharePdf } from '@features/scanner/scanActions';
 import type { RootStackParamList } from '@navigation/types';
 
@@ -39,6 +41,8 @@ export function ScannedFilesScreen() {
   const [selectionMode, setSelectionMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [itemMenu, setItemMenu] = useState<ScannedFile | null>(null);
+  const [previewFile, setPreviewFile] = useState<ScannedFile | null>(null);
+  const [renameFile, setRenameFile] = useState<ScannedFile | null>(null);
   // File ids awaiting the New-note/Existing-note choice, then the note picker.
   const [addChoiceFor, setAddChoiceFor] = useState<string[] | null>(null);
   const [notePickerFor, setNotePickerFor] = useState<string[] | null>(null);
@@ -103,10 +107,17 @@ export function ScannedFilesScreen() {
     load();
   };
 
+  const rename = async (id: string, name: string) => {
+    await scannedFilesRepo.renameScannedFile(id, name);
+    load();
+  };
+
   const itemActions: ContextAction[] = itemMenu
     ? [
+        { icon: 'eye', label: 'PDF Preview', onPress: () => setPreviewFile(itemMenu) },
         { icon: 'share-2', label: 'Share', onPress: () => sharePdf(itemMenu.localUri) },
         { icon: 'file-plus', label: 'Add to note', onPress: () => setAddChoiceFor([itemMenu.id]) },
+        { icon: 'edit-3', label: 'Rename', onPress: () => setRenameFile(itemMenu) },
         {
           icon: 'download',
           label: 'Save to device',
@@ -158,7 +169,7 @@ export function ScannedFilesScreen() {
               return (
                 <Pressable
                   key={f.id}
-                  onPress={() => (selectionMode ? toggle(f.id) : setItemMenu(f))}
+                  onPress={() => (selectionMode ? toggle(f.id) : setPreviewFile(f))}
                   onLongPress={() => {
                     if (!selectionMode) {
                       setSelectionMode(true);
@@ -185,6 +196,18 @@ export function ScannedFilesScreen() {
                       </AppText>
                     ) : null}
                   </View>
+                  {!selectionMode ? (
+                    <Pressable
+                      onPress={() => setItemMenu(f)}
+                      hitSlop={10}
+                      android_ripple={{ color: theme.colors.surfaceContainerHigh, borderless: true, radius: 22 }}
+                      style={styles.moreBtn}
+                      accessibilityRole="button"
+                      accessibilityLabel={`More actions for ${f.filename}`}
+                    >
+                      <Icon name="more-vertical" size={20} color="onSurfaceVariant" />
+                    </Pressable>
+                  ) : null}
                 </Pressable>
               );
             })}
@@ -225,6 +248,22 @@ export function ScannedFilesScreen() {
           if (notePickerFor) void addToExistingNote(notePickerFor, noteId);
         }}
       />
+
+      <RenameScanSheet
+        visible={!!renameFile}
+        filename={renameFile?.filename ?? ''}
+        onClose={() => setRenameFile(null)}
+        onSubmit={(name) => {
+          if (renameFile) void rename(renameFile.id, name);
+        }}
+      />
+
+      <PdfViewer
+        visible={!!previewFile}
+        uri={previewFile?.localUri ?? null}
+        title={previewFile?.filename}
+        onClose={() => setPreviewFile(null)}
+      />
     </Screen>
   );
 }
@@ -256,6 +295,7 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingVertical: 12, paddingHorizontal: 12 },
   pdfBadge: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   rowText: { flex: 1, gap: 2 },
+  moreBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   actionBar: {
     flexDirection: 'row',
     justifyContent: 'space-around',

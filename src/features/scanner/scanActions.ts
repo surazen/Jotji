@@ -3,13 +3,39 @@
  * a note). Both consume the same cache PDF that {@link scanDocument} produces.
  * "Attach to a note" lives with the caller instead — it needs navigation.
  */
-import { readAsStringAsync, StorageAccessFramework as SAF } from 'expo-file-system/legacy';
+import {
+  getContentUriAsync,
+  readAsStringAsync,
+  StorageAccessFramework as SAF,
+} from 'expo-file-system/legacy';
+import * as IntentLauncher from 'expo-intent-launcher';
 import * as Sharing from 'expo-sharing';
 
 import { toast } from '@core/components/Toast';
 import { runProtected } from '@core/security/appLockController';
 
 const PDF_MIME = 'application/pdf';
+
+/**
+ * Fallback preview: open the PDF in the device's default reader via an Android
+ * VIEW intent. Used only if the in-app {@link PdfViewer} is unavailable. Hands a
+ * temporary content:// grant to the external app; if none can open PDFs we tell
+ * the user to install one.
+ */
+export async function openPdfExternal(uri: string): Promise<void> {
+  try {
+    const contentUri = await getContentUriAsync(uri);
+    await runProtected(() =>
+      IntentLauncher.startActivityAsync('android.intent.action.VIEW', {
+        data: contentUri,
+        flags: 1, // FLAG_GRANT_READ_URI_PERMISSION
+        type: PDF_MIME,
+      }),
+    );
+  } catch {
+    toast.error('No PDF reader found. Install one to preview.');
+  }
+}
 
 /** Share the scanned PDF via the OS share sheet (WhatsApp, Gmail, Drive, …). */
 export async function sharePdf(uri: string): Promise<void> {

@@ -3,12 +3,15 @@ import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Icon } from '@core/components/Icon';
 import { ImageViewer } from '@core/components/ImageViewer';
+import { PdfViewer } from '@core/components/PdfViewer';
 import { AppText } from '@core/components/Text';
 import { useTheme } from '@core/theme/useTheme';
 import { fileLabelFromMime, mediaKindFromMime } from '@core/utils/files';
 import type { Attachment } from '@core/db/types';
 
 import { openFile } from '../utils/openFile';
+
+const PDF_MIME = 'application/pdf';
 
 type Props = {
   attachments: Attachment[];
@@ -18,12 +21,13 @@ type Props = {
 
 /**
  * Horizontal strip of a note's attachments. Images show as thumbnails (tap for a
- * full-screen, swipeable viewer); PDF/XLS/DOC show as file tiles (tap to open in
- * a system viewer).
+ * full-screen, swipeable viewer); PDFs open in the in-app PdfViewer (stays inside
+ * Jotji); other docs (XLS/DOC) show as file tiles that open in a system viewer.
  */
 export function AttachmentStrip({ attachments, onRemove }: Props) {
   const theme = useTheme();
   const [viewerIndex, setViewerIndex] = useState<number | null>(null);
+  const [pdfUri, setPdfUri] = useState<string | null>(null);
 
   if (attachments.length === 0) return null;
 
@@ -51,7 +55,9 @@ export function AttachmentStrip({ attachments, onRemove }: Props) {
                 </Pressable>
               ) : (
                 <Pressable
-                  onPress={() => openFile(a.localUri, a.mime)}
+                  onPress={() =>
+                    a.mime === PDF_MIME ? setPdfUri(a.localUri) : openFile(a.localUri, a.mime)
+                  }
                   style={[styles.fileTile, { backgroundColor: theme.colors.surfaceContainerHigh }]}
                 >
                   <Icon name="file-text" size={22} color="onSurfaceVariant" />
@@ -86,6 +92,13 @@ export function AttachmentStrip({ attachments, onRemove }: Props) {
         initialIndex={viewerIndex ?? 0}
         visible={viewerIndex !== null}
         onClose={() => setViewerIndex(null)}
+      />
+
+      <PdfViewer
+        visible={pdfUri !== null}
+        uri={pdfUri}
+        title="PDF"
+        onClose={() => setPdfUri(null)}
       />
     </>
   );

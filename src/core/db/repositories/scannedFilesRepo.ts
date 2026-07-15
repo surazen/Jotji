@@ -50,6 +50,13 @@ export async function addScannedFile(sourceUri: string): Promise<ScannedFile> {
   return { id, filename, localUri: uri, size, createdAt: ts };
 }
 
+/** Rename a scan. The stored filename always keeps a single ".pdf" suffix. */
+export async function renameScannedFile(id: string, name: string): Promise<void> {
+  const base = name.trim().replace(/\.pdf$/i, '');
+  if (!base) return;
+  await run(`UPDATE scanned_files SET filename = ? WHERE id = ?`, [`${base}.pdf`, id]);
+}
+
 export async function deleteScannedFile(id: string): Promise<void> {
   const row = await first<{ local_uri: string }>(
     `SELECT local_uri FROM scanned_files WHERE id = ?`,
