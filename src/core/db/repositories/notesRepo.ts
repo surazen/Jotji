@@ -139,15 +139,32 @@ export async function listPinnedNotes(): Promise<NoteWithRelations[]> {
 }
 
 /** Full-text search. Empty/operator-only queries return []. */
-export async function searchNotes(queryText: string): Promise<NoteWithRelations[]> {
+/**
+ * Full-text search over notes. Pass `notebookId` to scope to one notebook
+ * (null = the unfiled "General" bucket); omit it to search every note.
+ */
+export async function searchNotes(
+  queryText: string,
+  notebookId?: string | null,
+): Promise<NoteWithRelations[]> {
   const match = buildFtsMatchQuery(queryText);
   if (!match) return [];
+  const where = ['notes_fts MATCH ?'];
+  const params: (string | null)[] = [match];
+  if (notebookId !== undefined) {
+    if (notebookId === null) {
+      where.push('n.notebook_id IS NULL');
+    } else {
+      where.push('n.notebook_id = ?');
+      params.push(notebookId);
+    }
+  }
   const rows = await all<NoteRow>(
     `SELECT n.* FROM notes n
        JOIN notes_fts f ON n.rowid = f.rowid
-      WHERE notes_fts MATCH ?
+      WHERE ${where.join(' AND ')}
       ORDER BY rank`,
-    [match],
+    params,
   );
   return decorate(rows.map(mapNote));
 }

@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { FlashList } from '@shopify/flash-list';
 import { useFocusEffect, useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
@@ -14,10 +14,15 @@ import type { NoteWithRelations } from '@core/db/types';
 import { useResponsive } from '@core/utils/useResponsive';
 import { NotebookPicker } from '@features/notebooks/components/NotebookPicker';
 import { NoteCard } from '@features/notes/components/NoteCard';
+import { SearchBar } from '@features/search/components/SearchBar';
 import { shareNoteText } from '@features/notes/utils/shareNote';
 import type { RootStackParamList } from '@navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
+
+// The in-notebook search bar only appears once a notebook is large enough that
+// scanning the list becomes tedious; small notebooks stay uncluttered.
+const SEARCH_THRESHOLD = 20;
 
 export function NotebookDetailScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'NotebookDetail'>>();
@@ -26,6 +31,8 @@ export function NotebookDetailScreen() {
   const { notebookId, name } = route.params;
 
   const [notes, setNotes] = useState<NoteWithRelations[]>([]);
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<NoteWithRelations[]>([]);
   const [menuNote, setMenuNote] = useState<NoteWithRelations | null>(null);
   const [moveNote, setMoveNote] = useState<NoteWithRelations | null>(null);
 
@@ -39,6 +46,26 @@ export function NotebookDetailScreen() {
       void reload();
     }, [reload]),
   );
+
+  // Live full-text search, scoped to this notebook.
+  const trimmed = query.trim();
+  useEffect(() => {
+    if (!trimmed) {
+      setResults([]);
+      return;
+    }
+    let active = true;
+    void notesRepo.searchNotes(trimmed, notebookId).then((r) => {
+      if (active) setResults(r);
+    });
+    return () => {
+      active = false;
+    };
+  }, [trimmed, notebookId, notes]);
+
+  const searching = trimmed.length > 0;
+  const displayed = searching ? results : notes;
+  const showSearch = notes.length > SEARCH_THRESHOLD;
 
   const menuActions: ContextAction[] = menuNote
     ? [
@@ -77,18 +104,32 @@ export function NotebookDetailScreen() {
     <Screen>
       <StackHeader title={name} subtitle="Notebook" />
       <View style={[styles.content, { maxWidth: contentMaxWidth }]}>
+        {showSearch ? (
+          <View style={styles.searchWrap}>
+            <SearchBar value={query} onChangeText={setQuery} placeholder={`Search in ${name}`} />
+          </View>
+        ) : null}
         <FlashList
-          data={notes}
+          data={displayed}
           keyExtractor={(item) => item.id}
+          keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.list}
           ListEmptyComponent={
-            <EmptyState
-              icon="file-text"
-              title="Empty notebook"
-              message="Add a note to this notebook."
-              ctaLabel="Write a note"
-              onCta={() => navigation.navigate('NoteEditor', notebookId ? { notebookId } : undefined)}
-            />
+            searching ? (
+              <EmptyState
+                icon="search"
+                title="No matches"
+                message={`No notes in ${name} match “${trimmed}”.`}
+              />
+            ) : (
+              <EmptyState
+                icon="file-text"
+                title="Empty notebook"
+                message="Add a note to this notebook."
+                ctaLabel="Write a note"
+                onCta={() => navigation.navigate('NoteEditor', notebookId ? { notebookId } : undefined)}
+              />
+            )
           }
           renderItem={({ item }) => (
             <NoteCard
@@ -144,5 +185,6 @@ export function NotebookDetailScreen() {
 
 const styles = StyleSheet.create({
   content: { flex: 1, width: '100%', alignSelf: 'center' },
+  searchWrap: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 4 },
   list: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 120 },
 });
