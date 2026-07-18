@@ -15,21 +15,45 @@
  * <en-export> root, so a .enex renamed to .txt (or anything else) still imports
  * as ENEX, and the picker accepts every type.
  *
- * Image/media embeds in ENEX are not imported yet.
+ * Embedded ENEX resources (images) are decoded into note attachments. Remote
+ * <img> in web-clipped notes are optionally downloaded and localized so they
+ * render offline — the caller passes `localizeRemote` after asking the user.
  */
 import * as Crypto from 'expo-crypto';
 import * as DocumentPicker from 'expo-document-picker';
-import { File } from 'expo-file-system';
+import { File, Paths } from 'expo-file-system';
+import { downloadAsync, readAsStringAsync } from 'expo-file-system/legacy';
 
 import { runProtected } from '@core/security/appLockController';
+import * as attachmentsRepo from '@core/db/repositories/attachmentsRepo';
 import * as importsRepo from '@core/db/repositories/importsRepo';
 import type { ImportRecord } from '@core/db/repositories/importsRepo';
 import * as notebooksRepo from '@core/db/repositories/notebooksRepo';
 import * as notesRepo from '@core/db/repositories/notesRepo';
 import * as tagsRepo from '@core/db/repositories/tagsRepo';
+import { isAllowedAttachmentMime } from '@core/utils/files';
+import { newId } from '@core/utils/ids';
 import { DEFAULT_NOTEBOOK_COLOR } from '@features/notebooks/components/notebookColors';
 
-export type ImportResult = { imported: number; source: 'enex' | 'text'; notebookId: string | null };
+export type ImportResult = {
+  imported: number;
+  /** Embedded + localized-remote images attached to the imported notes. */
+  attachments: number;
+  source: 'enex' | 'text';
+  notebookId: string | null;
+};
+
+/** Cap for a single downloaded remote image (defends against huge/hostile URLs). */
+const MAX_REMOTE_IMAGE_BYTES = 8 * 1024 * 1024;
+
+// Image signatures as base64 prefixes of the first bytes — lets us verify a
+// downloaded file really is the image type it claims, without trusting the
+// server's Content-Type or decoding the whole payload.
+const IMAGE_MAGIC: { prefix: string; mime: string }[] = [
+  { prefix: '/9j/', mime: 'image/jpeg' }, // FF D8 FF
+  { prefix: 'iVBOR', mime: 'image/png' }, // 89 50 4E 47
+  { prefix: 'R0lG', mime: 'image/gif' }, // 47 49 46
+];
 
 /** Reported after each note so the caller can show a progress indicator. */
 export type ImportProgress = (done: number, total: number) => void;
@@ -120,6 +144,8 @@ export type PickedImport = {
   byteSize: number;
   /** A prior import of the identical file, if this one was imported before. */
   priorImport?: ImportRecord;
+  /** Unique remote <img> URLs across the file — the count to ask consent for. */
+  remoteImageCount: number;
 };
 
 async function resolveTarget(target: ImportTarget): Promise<string | null> {
@@ -141,13 +167,84 @@ async function tagIdsFor(names: string[]): Promise<string[]> {
   return ids;
 }
 
+function numOrNull(raw: string | null): number | null {
+  if (!raw) return null;
+  const n = parseInt(raw.trim(), 10);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** Decode a note block's embedded <resource> images into note attachments. */
+async function importNoteResources(block: string, noteId: string): Promise<number> {
+  const resources = block.match(/<resource>[\s\S]*?<\/resource>/gi) ?? [];
+  let count = 0;
+  for (const res of resources) {
+    const mime = (tagInner(res, 'mime') ?? '').trim().toLowerCase();
+    const data = tagInner(res, 'data');
+    if (!data || !isAllowedAttachmentMime(mime)) continue; // skip audio/ink/unknown
+    try {
+      await attachmentsRepo.addBase64Attachment({
+        noteId,
+        base64: data,
+        mime,
+        width: numOrNull(tagInner(res, 'width')),
+        height: numOrNull(tagInner(res, 'height')),
+      });
+      count += 1;
+    } catch {
+      // A single unreadable resource must not fail the whole note.
+    }
+  }
+  return count;
+}
+
+/** Unique remote (http/https) <img> URLs referenced in a note body. */
+function remoteImageUrls(html: string): string[] {
+  const urls = new Set<string>();
+  const re = /<img[^>]+src="(https?:\/\/[^"]+)"/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html))) urls.add(m[1]);
+  return [...urls];
+}
+
+/**
+ * Download one remote image into the sandbox as a note attachment. Returns true
+ * on success. Verifies the payload really is an image (magic bytes, not the
+ * server's Content-Type) and caps its size; any failure is swallowed so a dead
+ * or hostile URL never breaks the import.
+ */
+async function localizeRemoteImage(url: string, noteId: string): Promise<boolean> {
+  const tmp = new File(Paths.cache, `enex-remote-${newId()}`);
+  try {
+    const res = await downloadAsync(url, tmp.uri);
+    if (res.status !== 200) return false;
+    const size = new File(tmp.uri).size ?? 0;
+    if (size === 0 || size > MAX_REMOTE_IMAGE_BYTES) return false;
+    const head = await readAsStringAsync(tmp.uri, { encoding: 'base64', length: 12, position: 0 });
+    const kind = IMAGE_MAGIC.find((k) => head.startsWith(k.prefix));
+    if (!kind) return false;
+    await attachmentsRepo.addAttachment({ noteId, sourceUri: tmp.uri, mime: kind.mime });
+    return true;
+  } catch {
+    return false;
+  } finally {
+    try {
+      const t = new File(tmp.uri);
+      if (t.exists) t.delete();
+    } catch {
+      // best-effort cleanup of the cache temp file
+    }
+  }
+}
+
 /** Parse an ENEX document into notes and persist them. */
 async function importEnex(
   xml: string,
   notebookId: string | null,
+  localizeRemote: boolean,
   onProgress?: ImportProgress,
 ): Promise<ImportResult> {
   let imported = 0;
+  let attachments = 0;
   const blocks = enexNoteBlocks(xml);
   const total = blocks.length;
 
@@ -182,11 +279,19 @@ async function importEnex(
       .map((t) => decodeEntities(t.replace(/<\/?tag>/gi, '').trim()))
       .filter(Boolean);
     await notesRepo.setNoteTags(created.id, await tagIdsFor(tags));
+
+    attachments += await importNoteResources(block, created.id);
+    if (localizeRemote) {
+      for (const url of remoteImageUrls(bodyHtml)) {
+        if (await localizeRemoteImage(url, created.id)) attachments += 1;
+      }
+    }
+
     imported += 1;
     onProgress?.(imported, total);
   }
 
-  return { imported, source: 'enex', notebookId };
+  return { imported, attachments, source: 'enex', notebookId };
 }
 
 /** Import a Markdown / plain-text file as a single note. */
@@ -204,7 +309,7 @@ async function importText(
   const created = await notesRepo.createNote({ title, bodyHtml: paragraphs, notebookId });
   await notesRepo.setNoteTags(created.id, await tagIdsFor([]));
   onProgress?.(1, 1);
-  return { imported: 1, source: 'text', notebookId };
+  return { imported: 1, attachments: 0, source: 'text', notebookId };
 }
 
 /**
@@ -244,19 +349,24 @@ export async function pickImportFile(): Promise<PickedImport | null> {
     fileHash,
     byteSize: typeof file.size === 'number' ? file.size : content.length,
     priorImport: await importsRepo.findImportByHash(fileHash),
+    remoteImageCount: enex ? remoteImageUrls(content).length : 0,
   };
 }
 
-/** Phase 2: write the picked file's notes into the chosen notebook. */
+/**
+ * Phase 2: write the picked file's notes into the chosen notebook. `localizeRemote`
+ * (from a user prompt) controls whether remote <img> are downloaded and localized.
+ */
 export async function runImport(
   picked: PickedImport,
   target: ImportTarget,
+  options: { localizeRemote?: boolean } = {},
   onProgress?: ImportProgress,
 ): Promise<ImportResult> {
   const notebookId = await resolveTarget(target);
   const result =
     picked.source === 'enex'
-      ? await importEnex(picked.content, notebookId, onProgress)
+      ? await importEnex(picked.content, notebookId, options.localizeRemote ?? false, onProgress)
       : await importText(picked.fileName, picked.content, notebookId, onProgress);
   await importsRepo.recordImport({
     fileName: picked.fileName,

@@ -76,16 +76,22 @@ export function SettingsScreen() {
   const [sheet, setSheet] = useState<Sheet>(null);
   const [helpOpen, setHelpOpen] = useState(false);
   // A single-note file waiting on the user to choose its notebook.
-  const [pendingNote, setPendingNote] = useState<PickedImport | null>(null);
+  const [pendingNote, setPendingNote] = useState<{ picked: PickedImport; localizeRemote: boolean } | null>(null);
   // A file that was imported before, awaiting the re-import confirmation.
   const [dupWarn, setDupWarn] = useState<PickedImport | null>(null);
+  // A file with remote images, awaiting the download-images consent.
+  const [remoteConsent, setRemoteConsent] = useState<PickedImport | null>(null);
   // Live import progress (null = not importing → overlay hidden).
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
 
   const finishImport = async (result: ImportResult) => {
     await useNotesStore.getState().reload();
     await useNotebooksStore.getState().load();
-    toast.success(result.imported === 1 ? 'Imported 1 note' : `Imported ${result.imported} notes`);
+    const parts = [`${result.imported} ${result.imported === 1 ? 'note' : 'notes'}`];
+    if (result.attachments > 0) {
+      parts.push(`${result.attachments} ${result.attachments === 1 ? 'image' : 'images'}`);
+    }
+    toast.success(`Imported ${parts.join(' and ')}`);
   };
 
   const importFailed = (e: unknown) => {
@@ -97,10 +103,12 @@ export function SettingsScreen() {
   };
 
   // Actually write the notes, showing the blocking progress overlay throughout.
-  const doRun = async (picked: PickedImport, target: ImportTarget) => {
+  const doRun = async (picked: PickedImport, target: ImportTarget, localizeRemote: boolean) => {
     setProgress({ done: 0, total: picked.noteCount });
     try {
-      const result = await runImport(picked, target, (done, total) => setProgress({ done, total }));
+      const result = await runImport(picked, target, { localizeRemote }, (done, total) =>
+        setProgress({ done, total }),
+      );
       await finishImport(result);
     } catch (e) {
       importFailed(e);
@@ -111,12 +119,18 @@ export function SettingsScreen() {
 
   // A multi-note export is a notebook: recreate it under the file's name.
   // A single note has no notebook of its own, so let the user place it.
-  const proceed = (picked: PickedImport) => {
+  const place = (picked: PickedImport, localizeRemote: boolean) => {
     if (picked.noteCount > 1) {
-      void doRun(picked, { mode: 'new-notebook', name: picked.suggestedNotebookName });
+      void doRun(picked, { mode: 'new-notebook', name: picked.suggestedNotebookName }, localizeRemote);
     } else {
-      setPendingNote(picked);
+      setPendingNote({ picked, localizeRemote });
     }
+  };
+
+  // After the duplicate check: ask about remote images first if there are any.
+  const proceed = (picked: PickedImport) => {
+    if (picked.remoteImageCount > 0) setRemoteConsent(picked);
+    else place(picked, false);
   };
 
   const onImport = async () => {
@@ -131,9 +145,9 @@ export function SettingsScreen() {
   };
 
   const onPickNotebook = (notebookId: string | null) => {
-    const picked = pendingNote;
+    const pending = pendingNote;
     setPendingNote(null);
-    if (picked) void doRun(picked, { mode: 'existing', notebookId });
+    if (pending) void doRun(pending.picked, { mode: 'existing', notebookId }, pending.localizeRemote);
   };
 
   const onToggleAppLock = async (next: boolean) => {
@@ -263,6 +277,45 @@ export function SettingsScreen() {
             <Pressable onPress={() => setDupWarn(null)} style={styles.dupCancel} hitSlop={8}>
               <AppText variant="labelLg" color="primary">
                 Cancel
+              </AppText>
+            </Pressable>
+          </View>
+        ) : null}
+      </BottomSheet>
+
+      <BottomSheet
+        visible={!!remoteConsent}
+        onClose={() => setRemoteConsent(null)}
+        title="Download linked images?"
+      >
+        {remoteConsent ? (
+          <View style={styles.dupBody}>
+            <AppText variant="bodyMd" color="onSurfaceVariant">
+              {remoteConsent.remoteImageCount === 1
+                ? 'This import has 1 image linked from the web'
+                : `This import has ${remoteConsent.remoteImageCount} images linked from the web`}
+              . Download them so they show up offline? This makes one-time requests to those sites.
+            </AppText>
+            <Button
+              label="Download images"
+              onPress={() => {
+                const picked = remoteConsent;
+                setRemoteConsent(null);
+                place(picked, true);
+              }}
+              style={styles.dupCta}
+            />
+            <Pressable
+              onPress={() => {
+                const picked = remoteConsent;
+                setRemoteConsent(null);
+                place(picked, false);
+              }}
+              style={styles.dupCancel}
+              hitSlop={8}
+            >
+              <AppText variant="labelLg" color="primary">
+                Skip — import without them
               </AppText>
             </Pressable>
           </View>

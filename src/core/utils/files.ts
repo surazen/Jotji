@@ -7,13 +7,14 @@
  * DOC/DOCX (opened in their system viewer).
  */
 import { Directory, File, Paths } from 'expo-file-system';
+import { writeAsStringAsync } from 'expo-file-system/legacy';
 
 const ATTACH_DIRNAME = 'attachments';
 const SCANS_DIRNAME = 'scans';
 
 export type MediaKind = 'image' | 'file';
 
-const IMAGE_MIME = new Set(['image/jpeg', 'image/png']);
+const IMAGE_MIME = new Set(['image/jpeg', 'image/png', 'image/gif']);
 
 const DOC_MIME = new Set([
   'application/pdf',
@@ -43,6 +44,7 @@ export function mediaKindFromMime(mime: string | null | undefined): MediaKind {
 const EXT_BY_MIME: Record<string, string> = {
   'image/jpeg': '.jpg',
   'image/png': '.png',
+  'image/gif': '.gif',
   'application/pdf': '.pdf',
   'application/vnd.ms-excel': '.xls',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': '.xlsx',
@@ -100,6 +102,25 @@ export function persistScanToSandbox(sourceUri: string, id: string): { uri: stri
   const dest = new File(dir, `${id}.pdf`);
   src.copySync(dest);
   return { uri: dest.uri, size: dest.size ?? null };
+}
+
+/**
+ * Write base64 bytes (an embedded Evernote resource) straight into the sandbox.
+ * Whitespace in the base64 (ENEX wraps it) is stripped first. Async because it
+ * goes through the legacy string-writer, which is the only base64 file writer.
+ */
+export async function persistBase64ToSandbox(
+  base64: string,
+  id: string,
+  mime: string,
+): Promise<{ uri: string; size: number | null }> {
+  if (!isAllowedAttachmentMime(mime)) throw new Error(`Unsupported attachment type: ${mime}`);
+  const dir = attachmentsDir();
+  const ext = EXT_BY_MIME[mime.toLowerCase()] ?? '';
+  const dest = new File(dir, `${id}${ext}`);
+  await writeAsStringAsync(dest.uri, base64.replace(/\s/g, ''), { encoding: 'base64' });
+  const written = new File(dest.uri);
+  return { uri: written.uri, size: written.size ?? null };
 }
 
 /** Image-only variant kept for callers that must reject non-images. */

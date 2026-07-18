@@ -1,5 +1,10 @@
 /** Attachment data access + sandbox file lifecycle. Static SQL + bound params. */
-import { deleteSandboxFile, persistImageToSandbox, persistToSandbox } from '../../utils/files';
+import {
+  deleteSandboxFile,
+  persistBase64ToSandbox,
+  persistImageToSandbox,
+  persistToSandbox,
+} from '../../utils/files';
 import { newId, nowMs } from '../../utils/ids';
 import { all, first, run } from '../database';
 import type { Attachment } from '../types';
@@ -49,6 +54,36 @@ export async function addAttachment(input: AddAttachmentInput): Promise<Attachme
   const id = newId();
   const ts = nowMs();
   const { uri, size } = persistToSandbox(input.sourceUri, id, input.mime);
+  await run(
+    `INSERT INTO attachments (id, note_id, local_uri, mime, width, height, size, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [id, input.noteId, uri, input.mime, input.width ?? null, input.height ?? null, size, ts],
+  );
+  return {
+    id,
+    noteId: input.noteId,
+    localUri: uri,
+    mime: input.mime,
+    width: input.width ?? null,
+    height: input.height ?? null,
+    size,
+    createdAt: ts,
+  };
+}
+
+export type AddBase64AttachmentInput = {
+  noteId: string;
+  base64: string;
+  mime: string;
+  width?: number | null;
+  height?: number | null;
+};
+
+/** Persist an embedded base64 attachment (e.g. an Evernote resource) to a note. */
+export async function addBase64Attachment(input: AddBase64AttachmentInput): Promise<Attachment> {
+  const id = newId();
+  const ts = nowMs();
+  const { uri, size } = await persistBase64ToSandbox(input.base64, id, input.mime);
   await run(
     `INSERT INTO attachments (id, note_id, local_uri, mime, width, height, size, created_at)
      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
