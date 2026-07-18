@@ -2,15 +2,26 @@ import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { BottomSheet } from '@core/components/BottomSheet';
+import { Button } from '@core/components/Button';
 import { Icon } from '@core/components/Icon';
+import { ProgressOverlay } from '@core/components/ProgressOverlay';
 import { Screen } from '@core/components/Screen';
 import { SelectSheet, type SelectOption } from '@core/components/SelectSheet';
 import { StackHeader } from '@core/components/StackHeader';
 import { AppText } from '@core/components/Text';
 import { toast } from '@core/components/Toast';
 import { canUseAppLock, authenticate } from '@core/security/appLock';
+import { NotebookPicker } from '@features/notebooks/components/NotebookPicker';
+import { useNotebooksStore } from '@features/notebooks/store/notebooksStore';
 import { useNotesStore } from '@features/notes/store/notesStore';
-import { IMPORT_TOO_LARGE, pickAndImport } from '@features/notes/utils/importNotes';
+import {
+  IMPORT_TOO_LARGE,
+  pickImportFile,
+  runImport,
+  type ImportResult,
+  type ImportTarget,
+  type PickedImport,
+} from '@features/notes/utils/importNotes';
 import {
   FONT_FAMILY_LABELS,
   FONT_SCALE_LABELS,
@@ -64,22 +75,65 @@ export function SettingsScreen() {
 
   const [sheet, setSheet] = useState<Sheet>(null);
   const [helpOpen, setHelpOpen] = useState(false);
+  // A single-note file waiting on the user to choose its notebook.
+  const [pendingNote, setPendingNote] = useState<PickedImport | null>(null);
+  // A file that was imported before, awaiting the re-import confirmation.
+  const [dupWarn, setDupWarn] = useState<PickedImport | null>(null);
+  // Live import progress (null = not importing → overlay hidden).
+  const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
+
+  const finishImport = async (result: ImportResult) => {
+    await useNotesStore.getState().reload();
+    await useNotebooksStore.getState().load();
+    toast.success(result.imported === 1 ? 'Imported 1 note' : `Imported ${result.imported} notes`);
+  };
+
+  const importFailed = (e: unknown) => {
+    toast.error(
+      e instanceof Error && e.message === IMPORT_TOO_LARGE
+        ? 'That file is too large to import (over 50 MB).'
+        : 'Could not import that file',
+    );
+  };
+
+  // Actually write the notes, showing the blocking progress overlay throughout.
+  const doRun = async (picked: PickedImport, target: ImportTarget) => {
+    setProgress({ done: 0, total: picked.noteCount });
+    try {
+      const result = await runImport(picked, target, (done, total) => setProgress({ done, total }));
+      await finishImport(result);
+    } catch (e) {
+      importFailed(e);
+    } finally {
+      setProgress(null);
+    }
+  };
+
+  // A multi-note export is a notebook: recreate it under the file's name.
+  // A single note has no notebook of its own, so let the user place it.
+  const proceed = (picked: PickedImport) => {
+    if (picked.noteCount > 1) {
+      void doRun(picked, { mode: 'new-notebook', name: picked.suggestedNotebookName });
+    } else {
+      setPendingNote(picked);
+    }
+  };
 
   const onImport = async () => {
     try {
-      const result = await pickAndImport();
-      if (!result) return;
-      await useNotesStore.getState().reload();
-      toast.success(
-        result.imported === 1 ? 'Imported 1 note' : `Imported ${result.imported} notes`,
-      );
+      const picked = await pickImportFile();
+      if (!picked) return;
+      if (picked.priorImport) setDupWarn(picked);
+      else proceed(picked);
     } catch (e) {
-      toast.error(
-        e instanceof Error && e.message === IMPORT_TOO_LARGE
-          ? 'That file is too large to import (over 50 MB).'
-          : 'Could not import that file',
-      );
+      importFailed(e);
     }
+  };
+
+  const onPickNotebook = (notebookId: string | null) => {
+    const picked = pendingNote;
+    setPendingNote(null);
+    if (picked) void doRun(picked, { mode: 'existing', notebookId });
   };
 
   const onToggleAppLock = async (next: boolean) => {
@@ -179,6 +233,49 @@ export function SettingsScreen() {
         onClose={() => setSheet(null)}
       />
 
+      <NotebookPicker
+        visible={!!pendingNote}
+        title="Add imported note to"
+        onClose={() => setPendingNote(null)}
+        onSelect={onPickNotebook}
+      />
+
+      <BottomSheet visible={!!dupWarn} onClose={() => setDupWarn(null)} title="Already imported">
+        {dupWarn ? (
+          <View style={styles.dupBody}>
+            <AppText variant="bodyMd" color="onSurfaceVariant">
+              You imported this file on {formatDate(dupWarn.priorImport!.importedAt)} (
+              {dupWarn.priorImport!.noteCount === 1
+                ? '1 note'
+                : `${dupWarn.priorImport!.noteCount} notes`}
+              ). Importing it again creates a second copy and uses about{' '}
+              {formatSize(dupWarn.byteSize)} more storage.
+            </AppText>
+            <Button
+              label="Import anyway"
+              onPress={() => {
+                const picked = dupWarn;
+                setDupWarn(null);
+                proceed(picked);
+              }}
+              style={styles.dupCta}
+            />
+            <Pressable onPress={() => setDupWarn(null)} style={styles.dupCancel} hitSlop={8}>
+              <AppText variant="labelLg" color="primary">
+                Cancel
+              </AppText>
+            </Pressable>
+          </View>
+        ) : null}
+      </BottomSheet>
+
+      <ProgressOverlay
+        visible={progress !== null}
+        title="Importing notes…"
+        done={progress?.done}
+        total={progress?.total}
+      />
+
       <BottomSheet
         visible={helpOpen}
         onClose={() => setHelpOpen(false)}
@@ -208,6 +305,16 @@ export function SettingsScreen() {
   );
 }
 
+function formatDate(ms: number): string {
+  return new Date(ms).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+}
+
+function formatSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+}
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <View style={styles.section}>
@@ -230,4 +337,7 @@ const styles = StyleSheet.create({
   stepNum: { width: 20 },
   stepText: { flex: 1 },
   helpFootnote: { marginTop: 2 },
+  dupBody: { gap: 16, paddingBottom: 4 },
+  dupCta: { marginTop: 2 },
+  dupCancel: { alignSelf: 'center', paddingVertical: 4 },
 });

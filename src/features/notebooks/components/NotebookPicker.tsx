@@ -18,10 +18,18 @@ type NotebookPickerProps = {
   onSelect: (notebookId: string | null) => void;
   /** Currently-assigned notebook (to show a check). */
   selectedId?: string | null;
+  /** Sheet heading for the list view; the create view always reads "New notebook". */
+  title?: string;
 };
 
 /** Bottom sheet to move a note into a notebook, with inline "new notebook". */
-export function NotebookPicker({ visible, onClose, onSelect, selectedId }: NotebookPickerProps) {
+export function NotebookPicker({
+  visible,
+  onClose,
+  onSelect,
+  selectedId,
+  title = 'Move to notebook',
+}: NotebookPickerProps) {
   const theme = useTheme();
   const { height: screenHeight } = useWindowDimensions();
   const { notebooks, load, create } = useNotebooksStore();
@@ -70,7 +78,7 @@ export function NotebookPicker({ visible, onClose, onSelect, selectedId }: Noteb
     <BottomSheet
       visible={visible}
       onClose={onClose}
-      title={mode === 'create' ? 'New notebook' : 'Move to notebook'}
+      title={mode === 'create' ? 'New notebook' : title}
     >
       {mode === 'create' ? (
         <View style={styles.form}>

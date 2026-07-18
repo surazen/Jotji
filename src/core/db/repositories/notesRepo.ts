@@ -163,17 +163,26 @@ export type CreateNoteInput = {
   title?: string;
   bodyHtml?: string;
   notebookId?: string | null;
+  /**
+   * Original timestamps (epoch ms), for importers that carry a note's history
+   * over from another app. Both default to "now", and `updatedAt` defaults to
+   * `createdAt`, so ordinary note creation is unaffected.
+   */
+  createdAt?: number;
+  updatedAt?: number;
 };
 
 export async function createNote(input: CreateNoteInput = {}): Promise<Note> {
   const id = newId();
-  const ts = nowMs();
+  const now = nowMs();
+  const createdAt = input.createdAt ?? now;
+  const updatedAt = input.updatedAt ?? createdAt;
   const safeHtml = sanitizeHtml(input.bodyHtml ?? '');
   const plain = htmlToPlainText(safeHtml);
   await run(
     `INSERT INTO notes (id, notebook_id, title, body_html, body_plain, is_pinned, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, 0, ?, ?)`,
-    [id, input.notebookId ?? null, input.title ?? '', safeHtml, plain, ts, ts],
+    [id, input.notebookId ?? null, input.title ?? '', safeHtml, plain, createdAt, updatedAt],
   );
   return {
     id,
@@ -182,8 +191,8 @@ export async function createNote(input: CreateNoteInput = {}): Promise<Note> {
     bodyHtml: safeHtml,
     bodyPlain: plain,
     isPinned: false,
-    createdAt: ts,
-    updatedAt: ts,
+    createdAt,
+    updatedAt,
   };
 }
 

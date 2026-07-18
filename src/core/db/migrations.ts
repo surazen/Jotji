@@ -123,6 +123,24 @@ export const MIGRATIONS: Migration[] = [
       `CREATE INDEX idx_scanned_files_created ON scanned_files(created_at DESC);`,
     ],
   },
+  {
+    version: 3,
+    statements: [
+      // Ledger of completed file imports (Evernote .enex / text), keyed by a
+      // content hash so a re-import of the same file can warn the user before it
+      // silently duplicates their notes and eats storage. notebook_id is nulled
+      // if the imported notebook is later deleted (the ledger row survives).
+      `CREATE TABLE imports (
+        id TEXT PRIMARY KEY NOT NULL,
+        file_name TEXT NOT NULL,
+        file_hash TEXT NOT NULL,
+        note_count INTEGER NOT NULL,
+        notebook_id TEXT REFERENCES notebooks(id) ON DELETE SET NULL,
+        imported_at INTEGER NOT NULL
+      );`,
+      `CREATE INDEX idx_imports_hash ON imports(file_hash);`,
+    ],
+  },
 ];
 
 export const LATEST_VERSION = MIGRATIONS[MIGRATIONS.length - 1].version;
