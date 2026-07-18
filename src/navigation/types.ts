@@ -22,6 +22,8 @@ export type RootStackParamList = {
   NotebookDetail: { notebookId: string | null; name: string };
   Settings: undefined;
   Support: undefined;
+  /** Static Help / FAQ (Profile → Help & FAQ). */
+  Faq: undefined;
 };
 
 declare global {

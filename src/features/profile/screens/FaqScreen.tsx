@@ -1,0 +1,138 @@
+import React, { useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+
+import { Icon } from '@core/components/Icon';
+import { Screen } from '@core/components/Screen';
+import { StackHeader } from '@core/components/StackHeader';
+import { AppText } from '@core/components/Text';
+import { useResponsive } from '@core/utils/useResponsive';
+import { useTheme } from '@core/theme/useTheme';
+
+/** One answer paragraph. `bullet` renders it as a list item. */
+type Para = { text: string; bullet?: boolean };
+type Faq = { q: string; a: Para[] };
+
+const FAQS: Faq[] = [
+  {
+    q: 'Where do my scanned documents go?',
+    a: [
+      { text: 'It depends on where you started the scan:' },
+      {
+        text: 'From the Scan tab, a scan is kept in the Scanned files library — the folder icon at the top of Home. Open it any time to preview, share, rename, save, add to a note, or delete.',
+        bullet: true,
+      },
+      {
+        text: 'From inside a note (the scan button while editing), the scan is attached to that note. Open the note and tap the PDF to view it.',
+        bullet: true,
+      },
+      {
+        text: 'Scans made inside a note stay with their note — they are not also listed in the Scanned files library.',
+      },
+    ],
+  },
+  {
+    q: 'How do I scan more than one page into a single PDF?',
+    a: [
+      {
+        text: 'After you capture and crop the first page, look for the blue “add page” button (a page with a + on it) near the bottom-right of the review screen. Tap it to scan the next page.',
+      },
+      {
+        text: 'A row of thumbnails shows the pages you have so far. When you are done, tap Next (or Save) and all the pages come back as one PDF. You can add up to 10 pages.',
+      },
+      {
+        text: 'Tip: tapping Next right after the first page ends the scan at a single page — use the blue + button first to keep adding pages.',
+      },
+    ],
+  },
+  {
+    q: 'How do I bring my notes over from Evernote?',
+    a: [
+      {
+        text: 'On a Windows or Mac computer, open Evernote, right-click a notebook (or select notes) and Export as an ENEX (.enex) file. Send that file to your phone.',
+      },
+      {
+        text: 'In Jotji, go to Settings → Notes & data → Import notes and pick the file. A notebook export becomes a new notebook named after the file; a single note lets you choose which notebook it joins.',
+      },
+      {
+        text: 'Your original note dates are kept, and imported notes carry an “en import” tag. Images stored in the note come across too; images that were only linked from the web are downloaded if you allow it.',
+      },
+    ],
+  },
+  {
+    q: 'Is my data private?',
+    a: [
+      {
+        text: 'Yes. Jotji is built to keep everything on your device. There is no account and no cloud — your notes never leave your phone unless you share them yourself.',
+      },
+      {
+        text: 'Notes are stored in an encrypted on-device database, and there is no analytics or tracking of any kind.',
+      },
+    ],
+  },
+];
+
+/** Static Help / FAQ screen — a plain, offline accordion of common questions. */
+export function FaqScreen() {
+  const { contentMaxWidth } = useResponsive();
+  const [open, setOpen] = useState<number | null>(0);
+
+  return (
+    <Screen>
+      <StackHeader title="Help & FAQ" />
+      <ScrollView contentContainerStyle={[styles.content, { maxWidth: contentMaxWidth }]}>
+        {FAQS.map((faq, i) => (
+          <FaqItem key={faq.q} faq={faq} expanded={open === i} onToggle={() => setOpen(open === i ? null : i)} />
+        ))}
+      </ScrollView>
+    </Screen>
+  );
+}
+
+function FaqItem({ faq, expanded, onToggle }: { faq: Faq; expanded: boolean; onToggle: () => void }) {
+  const theme = useTheme();
+  return (
+    <View style={[styles.card, { backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: 14 }]}>
+      <Pressable
+        onPress={onToggle}
+        android_ripple={{ color: theme.colors.surfaceContainerHigh }}
+        style={styles.qRow}
+        accessibilityRole="button"
+      >
+        <AppText variant="titleSm" color="onSurface" style={styles.qText}>
+          {faq.q}
+        </AppText>
+        <Icon name={expanded ? 'chevron-up' : 'chevron-down'} size={20} color="onSurfaceVariant" />
+      </Pressable>
+      {expanded ? (
+        <View style={styles.answer}>
+          {faq.a.map((p, i) =>
+            p.bullet ? (
+              <View key={i} style={styles.bulletRow}>
+                <AppText variant="bodyMd" color="onSurfaceVariant">
+                  •
+                </AppText>
+                <AppText variant="bodyMd" color="onSurfaceVariant" style={styles.bulletText}>
+                  {p.text}
+                </AppText>
+              </View>
+            ) : (
+              <AppText key={i} variant="bodyMd" color="onSurfaceVariant">
+                {p.text}
+              </AppText>
+            ),
+          )}
+        </View>
+      ) : null}
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  content: { width: '100%', alignSelf: 'center', paddingHorizontal: 24, paddingTop: 8, paddingBottom: 40 },
+  card: { marginBottom: 10, overflow: 'hidden' },
+  qRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 16, paddingVertical: 16 },
+  qText: { flex: 1 },
+  answer: { paddingHorizontal: 16, paddingBottom: 16, paddingTop: 2, gap: 10 },
+  bulletRow: { flexDirection: 'row', gap: 8 },
+  bulletText: { flex: 1 },
+});

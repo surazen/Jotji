@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SupportScreen } from '@features/donations/screens/SupportScreen';
 import { NotebookDetailScreen } from '@features/notebooks/screens/NotebookDetailScreen';
 import { NoteEditorScreen } from '@features/notes/screens/NoteEditorScreen';
+import { FaqScreen } from '@features/profile/screens/FaqScreen';
 import { SettingsScreen } from '@features/profile/screens/SettingsScreen';
 import { SearchScreen } from '@features/search/screens/SearchScreen';
 import { ScannedFilesScreen } from '@features/scanner/screens/ScannedFilesScreen';
@@ -23,6 +24,7 @@ export function RootNavigator() {
       <Stack.Screen name="NoteEditor" component={NoteEditorScreen} />
       <Stack.Screen name="NotebookDetail" component={NotebookDetailScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="Faq" component={FaqScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />
     </Stack.Navigator>
   );
