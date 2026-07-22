@@ -12,49 +12,50 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import { Button } from '@core/components/Button';
-import { Icon, type IconName } from '@core/components/Icon';
 import { AppText } from '@core/components/Text';
 import { useResponsive } from '@core/utils/useResponsive';
 import { useTheme } from '@core/theme/useTheme';
 import { useSettingsStore } from '@features/profile/store/settingsStore';
 import type { RootStackParamList } from '@navigation/types';
 
+import { CardVisual, type VisualKind } from '../components/OnboardingVisuals';
+
 type Nav = NativeStackNavigationProp<RootStackParamList, 'Onboarding'>;
 type Route = RouteProp<RootStackParamList, 'Onboarding'>;
 
-type Card = { icon: IconName; title: string; body: string };
+type Card = { visual: VisualKind; title: string; body: string };
 
 // Stable references: React Native requires these not to change between renders.
 const VIEWABILITY_CONFIG = { itemVisiblePercentThreshold: 50 };
 
 const CARDS: Card[] = [
   {
-    icon: 'feather',
+    visual: 'write',
     title: 'Welcome to Jotji',
     body: 'Your private notebook, kept only on this device. Tap the + button any time to start writing.',
   },
   {
-    icon: 'folder',
+    visual: 'organize',
     title: 'Organize your way',
     body: 'File notes into notebooks, and add tags to connect related notes across them. Long-press a note to Move, Pin, or share it.',
   },
   {
-    icon: 'paperclip',
+    visual: 'toolbar',
     title: 'Capture more than text',
     body: 'While editing a note, use the toolbar to add photos, attach files, or scan a document straight to a PDF.',
   },
   {
-    icon: 'search',
+    visual: 'search',
     title: 'Find & pin',
     body: 'Tap the magnifier at the top to search across every note. Pin the ones that matter to keep them on top.',
   },
   {
-    icon: 'lock',
+    visual: 'privacy',
     title: 'Private by design',
     body: 'No account, no cloud. Everything is encrypted on your device, and you can lock the app with your fingerprint.',
   },
   {
-    icon: 'help-circle',
+    visual: 'help',
     title: 'You’re all set',
     body: 'Bring notes over from Evernote in Settings, and find answers any time under Profile → Help & FAQ.',
   },
@@ -114,9 +115,7 @@ export function OnboardingScreen() {
         getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
         renderItem={({ item }) => (
           <View style={[styles.card, { width }]}>
-            <View style={[styles.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
-              <Icon name={item.icon} size={44} color="onPrimaryContainer" />
-            </View>
+            <CardVisual kind={item.visual} />
             <View style={{ maxWidth: contentMaxWidth }}>
               <AppText variant="headlineMd" color="onSurface" style={styles.title}>
                 {item.title}
@@ -155,7 +154,6 @@ const styles = StyleSheet.create({
   root: { flex: 1 },
   skip: { height: 44, alignSelf: 'flex-end', justifyContent: 'center', paddingHorizontal: 24 },
   card: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 36, paddingBottom: 24 },
-  iconCircle: { width: 96, height: 96, borderRadius: 48, alignItems: 'center', justifyContent: 'center', marginBottom: 32 },
   title: { textAlign: 'center', marginBottom: 14 },
   body: { textAlign: 'center', lineHeight: 26 },
   bottom: { paddingHorizontal: 24, paddingBottom: 16, gap: 20 },
