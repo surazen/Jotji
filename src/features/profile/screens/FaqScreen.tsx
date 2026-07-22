@@ -14,6 +14,43 @@ type Faq = { q: string; a: Para[] };
 
 const FAQS: Faq[] = [
   {
+    q: 'What’s the difference between notebooks and tags?',
+    a: [
+      {
+        text: 'A note lives in one notebook — think of notebooks as folders for filing your notes. To file a note, open its menu (long-press it, or tap the ⋮) and choose Move to notebook.',
+      },
+      {
+        text: 'Tags are labels. A note can have several, and the same tag can appear across different notebooks — handy for themes that cut across your filing, like a project or a place. Add tags with the Tag button while editing a note.',
+      },
+    ],
+  },
+  {
+    q: 'How do I add photos, files, or tags to a note?',
+    a: [
+      { text: 'While editing a note, use the row of buttons above the keyboard:' },
+      { text: 'Camera — take a photo', bullet: true },
+      { text: 'Gallery — pick photos you already have', bullet: true },
+      { text: 'Scan — scan a document to a PDF', bullet: true },
+      { text: 'File — attach a PDF or document', bullet: true },
+      { text: 'Tag — add labels to the note', bullet: true },
+      { text: 'Photos and PDFs appear under the note — tap one to open it full-screen.' },
+    ],
+  },
+  {
+    q: 'How do I find and pin notes?',
+    a: [
+      {
+        text: 'Tap the magnifier at the top of Home (or Notebooks) to search across all your notes — it looks in both titles and the note text.',
+      },
+      {
+        text: 'Inside a large notebook, a search bar appears so you can search just that notebook.',
+      },
+      {
+        text: 'To keep an important note at the top, open its menu (long-press or ⋮) and choose Pin.',
+      },
+    ],
+  },
+  {
     q: 'Where do my scanned documents go?',
     a: [
       { text: 'It depends on where you started the scan:' },
@@ -59,6 +96,17 @@ const FAQS: Faq[] = [
     ],
   },
   {
+    q: 'How do I lock the app?',
+    a: [
+      {
+        text: 'Go to Settings → Privacy & security → App lock and turn it on. You’ll need a screen lock (PIN, pattern, or fingerprint) set up on your phone first.',
+      },
+      {
+        text: 'After that, Jotji asks for your fingerprint or PIN each time you open it.',
+      },
+    ],
+  },
+  {
     q: 'Is my data private?',
     a: [
       {
@@ -66,6 +114,20 @@ const FAQS: Faq[] = [
       },
       {
         text: 'Notes are stored in an encrypted on-device database, and there is no analytics or tracking of any kind.',
+      },
+    ],
+  },
+  {
+    q: 'Where are my notes stored, and are they backed up?',
+    a: [
+      {
+        text: 'Your notes stay in an encrypted database on this device only. There is no account and no cloud, so nothing is uploaded anywhere.',
+      },
+      {
+        text: 'For that same privacy reason, Jotji’s data is not included in your phone’s backup. If the device is lost or reset, or you uninstall the app, the notes can’t be recovered.',
+      },
+      {
+        text: 'A way to export your notes is on the roadmap. Until then, treat anything important as living only on this device.',
       },
     ],
   },
