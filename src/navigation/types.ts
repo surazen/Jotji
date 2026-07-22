@@ -24,6 +24,8 @@ export type RootStackParamList = {
   Support: undefined;
   /** Static Help / FAQ (Profile → Help & FAQ). */
   Faq: undefined;
+  /** First-launch walkthrough. `fromProfile` = replayed from Profile (goes back, not into Tabs). */
+  Onboarding: { fromProfile?: boolean } | undefined;
 };
 
 declare global {

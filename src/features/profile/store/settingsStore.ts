@@ -18,6 +18,8 @@ type SettingsState = {
   appLockEnabled: boolean;
   /** One-time "long-press a link to open it" hint has been shown. */
   linkHintSeen: boolean;
+  /** First-launch onboarding walkthrough has been completed or skipped. */
+  onboardingSeen: boolean;
 
   hydrate: () => Promise<void>;
   setThemeMode: (mode: ThemeMode) => Promise<void>;
@@ -25,6 +27,7 @@ type SettingsState = {
   setFontScale: (scale: FontScaleKey) => Promise<void>;
   setAppLockEnabled: (enabled: boolean) => Promise<void>;
   markLinkHintSeen: () => Promise<void>;
+  markOnboardingSeen: () => Promise<void>;
 };
 
 function oneOf<T extends string>(value: string | undefined, allowed: readonly T[], fallback: T): T {
@@ -38,6 +41,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   fontScale: 'm',
   appLockEnabled: false,
   linkHintSeen: false,
+  onboardingSeen: false,
 
   hydrate: async () => {
     const s = await getAllSettings();
@@ -48,6 +52,7 @@ export const useSettingsStore = create<SettingsState>((set) => ({
       fontScale: oneOf(s.fontScale, Object.keys(fontScales) as FontScaleKey[], 'm'),
       appLockEnabled: s.appLockEnabled === 'true',
       linkHintSeen: s.linkHintSeen === 'true',
+      onboardingSeen: s.onboardingSeen === 'true',
     });
   },
 
@@ -70,5 +75,9 @@ export const useSettingsStore = create<SettingsState>((set) => ({
   markLinkHintSeen: async () => {
     set({ linkHintSeen: true });
     await setSetting('linkHintSeen', 'true');
+  },
+  markOnboardingSeen: async () => {
+    set({ onboardingSeen: true });
+    await setSetting('onboardingSeen', 'true');
   },
 }));

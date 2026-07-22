@@ -79,6 +79,11 @@ export function ProfileScreen() {
         <View style={styles.rows}>
           <SettingsRow icon="settings" label="Settings" onPress={() => navigation.navigate('Settings')} />
           <SettingsRow icon="help-circle" label="Help & FAQ" onPress={() => navigation.navigate('Faq')} />
+          <SettingsRow
+            icon="compass"
+            label="Take the tour"
+            onPress={() => navigation.navigate('Onboarding', { fromProfile: true })}
+          />
           <SettingsRow icon="heart" label="Support Jotji" onPress={() => navigation.navigate('Support')} />
         </View>
 
