@@ -11,11 +11,11 @@ import { useResponsive } from '@core/utils/useResponsive';
 import { useTheme } from '@core/theme/useTheme';
 
 /**
- * Donation link. Jotji is donation-supported (like DailyGuidance). Contributions
- * are handled on an external web page rather than via in-app purchase. Replace
- * this URL with the project's real donation page before release.
+ * Donation link. Jotji is donation-supported: contributions are handled on an
+ * external Ko-fi page (a browser link-out), never via in-app purchase — donations
+ * unlock nothing and stay outside Google Play Billing, which the policy allows.
  */
-const DONATION_URL = 'https://www.buymeacoffee.com/jotji';
+const DONATION_URL = 'https://ko-fi.com/jotji';
 
 export function SupportScreen() {
   const theme = useTheme();
