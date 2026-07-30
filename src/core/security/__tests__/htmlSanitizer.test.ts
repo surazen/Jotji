@@ -48,6 +48,18 @@ describe('sanitizeHtml', () => {
     expect(sanitizeHtml('<img src="data:image/png;base64,AAAA" />')).toContain('data:image/png');
     expect(sanitizeHtml('<img src="data:text/html;base64,AAAA" />')).not.toContain('data:text/html');
   });
+
+  it('drops remote <img> src (tracking-beacon defense) but keeps local + data:image', () => {
+    // A remote src would make the editor WebView fetch it on render, leaking the
+    // device IP/time to a third party — so it must not survive sanitization.
+    const remote = sanitizeHtml('<img src="https://tracker.example/pixel.png" alt="x" />');
+    expect(remote).not.toContain('tracker.example');
+    expect(remote).not.toContain('https://');
+    // On-device and inline-data image sources remain allowed.
+    expect(sanitizeHtml('<img src="file:///data/user/0/app/img.png" />')).toContain('file:');
+    expect(sanitizeHtml('<img src="content://media/1" />')).toContain('content:');
+    expect(sanitizeHtml('<img src="data:image/png;base64,AAAA" />')).toContain('data:image/png');
+  });
 });
 
 describe('htmlToPlainText', () => {

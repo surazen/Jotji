@@ -66,6 +66,22 @@ function isSafeUrl(url: string): boolean {
   return true;
 }
 
+/**
+ * Image (`<img src>`) rule — deliberately STRICTER than links (`isSafeUrl`):
+ * inline image data or on-device files only, never a remote URL. A remote src
+ * makes the editor WebView fetch it when the note renders, leaking the device's
+ * IP + a timestamp to a third party (a tracking "web bug"), which would break
+ * Jotji's on-device / no-network promise. Images the user actually wants are
+ * localized to attachments on import, so a remote body `<img src>` is never
+ * needed. This is an allowlist, so it fails closed: anything that isn't clearly
+ * a local/data image is dropped.
+ */
+function isSafeImageSrc(url: string): boolean {
+  const v = url.trim().toLowerCase();
+  if (v.startsWith('data:')) return /^data:image\/(png|jpe?g|gif|webp|bmp);/i.test(v);
+  return v.startsWith('file:') || v.startsWith('content:');
+}
+
 function escapeAttr(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
@@ -90,7 +106,8 @@ function buildAttrs(tag: string, raw: string): string {
   for (const [name, value] of parseAttrs(raw)) {
     if (name.startsWith('on')) continue; // event handlers
     if (!allowed.has(name)) continue;
-    if ((name === 'href' || name === 'src') && !isSafeUrl(value)) continue;
+    if (name === 'href' && !isSafeUrl(value)) continue;
+    if (name === 'src' && !isSafeImageSrc(value)) continue;
     out.push(`${name}="${escapeAttr(value)}"`);
   }
   return out.length ? ' ' + out.join(' ') : '';
