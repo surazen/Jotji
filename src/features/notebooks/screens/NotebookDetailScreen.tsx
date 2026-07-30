@@ -15,7 +15,7 @@ import { useResponsive } from '@core/utils/useResponsive';
 import { NotebookPicker } from '@features/notebooks/components/NotebookPicker';
 import { NoteCard } from '@features/notes/components/NoteCard';
 import { SearchBar } from '@features/search/components/SearchBar';
-import { shareNoteText } from '@features/notes/utils/shareNote';
+import { shareNoteText, shareNoteToAi } from '@features/notes/utils/shareNote';
 import type { RootStackParamList } from '@navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -87,6 +87,11 @@ export function NotebookDetailScreen() {
           icon: 'share-2',
           label: 'Share',
           onPress: () => shareNoteText(menuNote.title, menuNote.bodyPlain),
+        },
+        {
+          icon: 'zap',
+          label: 'Summarize with AI',
+          onPress: () => shareNoteToAi(menuNote.title, menuNote.bodyPlain),
         },
         {
           icon: 'trash-2',

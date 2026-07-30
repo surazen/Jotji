@@ -21,7 +21,7 @@ import { useNotesStore } from '@features/notes/store/notesStore';
 import type { RootStackParamList } from '@navigation/types';
 
 import { NoteCard } from '../components/NoteCard';
-import { shareNoteText } from '../utils/shareNote';
+import { shareNoteText, shareNoteToAi } from '../utils/shareNote';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -65,6 +65,11 @@ export function NoteListScreen() {
           icon: 'share-2',
           label: 'Share',
           onPress: () => shareNoteText(menuNote.title, menuNote.bodyPlain),
+        },
+        {
+          icon: 'zap',
+          label: 'Summarize with AI',
+          onPress: () => shareNoteToAi(menuNote.title, menuNote.bodyPlain),
         },
         {
           icon: 'trash-2',

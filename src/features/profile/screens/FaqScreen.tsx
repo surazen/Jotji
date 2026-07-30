@@ -96,6 +96,20 @@ const FAQS: Faq[] = [
     ],
   },
   {
+    q: 'Can I use AI to summarize a note?',
+    a: [
+      {
+        text: 'Jotji has no built-in AI, which keeps your notes private and offline. Instead, you can hand a single note to an AI app you already have — like Claude, Gemini, or ChatGPT.',
+      },
+      {
+        text: 'Open a note’s menu (long-press it, or tap the ⋮) and choose Summarize with AI. Jotji passes just that one note’s text to the app you pick from the share sheet — nothing is sent automatically, and only the note you chose ever leaves your device.',
+      },
+      {
+        text: 'The summary appears in the other app. To keep it, copy it back into your note. Your notebooks stay private — only the notes you deliberately share this way are ever sent anywhere.',
+      },
+    ],
+  },
+  {
     q: 'How do I lock the app?',
     a: [
       {

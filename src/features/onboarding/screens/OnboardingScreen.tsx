@@ -55,6 +55,11 @@ const CARDS: Card[] = [
     body: 'No account, no cloud. Everything is encrypted on your device, and you can lock the app with your fingerprint.',
   },
   {
+    visual: 'ai',
+    title: 'AI, on your terms',
+    body: 'Jotji has no built-in AI, so your notes stay private. From a note’s menu, tap Summarize with AI to hand just that one note to an app you choose — like Claude or Gemini.',
+  },
+  {
     visual: 'help',
     title: 'You’re all set',
     body: 'Bring notes over from Evernote in Settings, and find answers any time under Profile → Help & FAQ.',

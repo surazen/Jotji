@@ -17,7 +17,7 @@ import { TagCloud } from '@features/tags/components/TagCloud';
 import { useTagsStore } from '@features/tags/store/tagsStore';
 import type { TagWithCount } from '@features/tags/types';
 import { useNotesStore } from '@features/notes/store/notesStore';
-import { shareNoteText } from '@features/notes/utils/shareNote';
+import { shareNoteText, shareNoteToAi } from '@features/notes/utils/shareNote';
 import type { RootStackParamList } from '@navigation/types';
 
 import { NoteCard } from '@features/notes/components/NoteCard';
@@ -101,6 +101,11 @@ export function SearchScreen() {
           icon: 'share-2',
           label: 'Share',
           onPress: () => shareNoteText(menuNote.title, menuNote.bodyPlain),
+        },
+        {
+          icon: 'zap',
+          label: 'Summarize with AI',
+          onPress: () => shareNoteToAi(menuNote.title, menuNote.bodyPlain),
         },
         {
           icon: 'trash-2',

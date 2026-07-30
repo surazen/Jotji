@@ -11,7 +11,7 @@ import { useTheme } from '@core/theme/useTheme';
  * own components/icons rather than bundled screenshots — so they're theme-aware
  * (light/dark), crisp at any size, and mirror what the user actually sees.
  */
-export type VisualKind = 'write' | 'organize' | 'toolbar' | 'search' | 'privacy' | 'help';
+export type VisualKind = 'write' | 'organize' | 'toolbar' | 'search' | 'ai' | 'privacy' | 'help';
 
 export function CardVisual({ kind }: { kind: VisualKind }) {
   return <View style={styles.stage}>{renderVisual(kind)}</View>;
@@ -27,6 +27,8 @@ function renderVisual(kind: VisualKind) {
       return <ToolbarRow />;
     case 'search':
       return <SearchPill />;
+    case 'ai':
+      return <AiShareRow />;
     case 'privacy':
       return <PrivacyChips />;
     case 'help':
@@ -94,6 +96,22 @@ function SearchPill() {
       <AppText variant="bodyMd" color="onSurfaceVariant">
         Search your notes
       </AppText>
+    </View>
+  );
+}
+
+/** The "Summarize with AI" row as it appears in a note's menu. */
+function AiShareRow() {
+  const theme = useTheme();
+  return (
+    <View style={[styles.helpRow, { backgroundColor: theme.colors.surfaceContainerLowest, borderRadius: 14 }]}>
+      <View style={[styles.helpIcon, { backgroundColor: theme.colors.secondaryContainer }]}>
+        <Icon name="zap" size={18} color="onSecondaryContainer" />
+      </View>
+      <AppText variant="bodyMd" color="onSurface" style={styles.helpLabel}>
+        Summarize with AI
+      </AppText>
+      <Icon name="share-2" size={18} color="onSurfaceVariant" />
     </View>
   );
 }
