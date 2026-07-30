@@ -1,16 +1,29 @@
 import React, { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Linking, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Icon } from '@core/components/Icon';
 import { Screen } from '@core/components/Screen';
 import { StackHeader } from '@core/components/StackHeader';
 import { AppText } from '@core/components/Text';
+import { toast } from '@core/components/Toast';
 import { useResponsive } from '@core/utils/useResponsive';
 import { useTheme } from '@core/theme/useTheme';
 
-/** One answer paragraph. `bullet` renders it as a list item. */
-type Para = { text: string; bullet?: boolean };
+/** One answer paragraph. `bullet` renders it as a list item; `link` adds a tappable line below. */
+type Para = { text: string; bullet?: boolean; link?: { label: string; url: string } };
 type Faq = { q: string; a: Para[] };
+
+async function openUrl(url: string): Promise<void> {
+  try {
+    if (!(await Linking.canOpenURL(url))) {
+      toast.error('Could not open the link');
+      return;
+    }
+    await Linking.openURL(url);
+  } catch {
+    toast.error('Could not open the link');
+  }
+}
 
 const FAQS: Faq[] = [
   {
@@ -110,6 +123,10 @@ const FAQS: Faq[] = [
       {
         text: 'You can do the same with a scanned document: open a scan (from the Scanned files library or a PDF inside a note) and tap the ⚡ button, or use Ask AI about this scan in the scan’s menu. This is handy for reading, summarizing, or pulling details out of a scan. It works if the AI app you pick accepts PDF files — some only take photos.',
       },
+      {
+        text: 'Don’t see an AI app in the share sheet? You’ll need one installed first — for example Claude, ChatGPT, or Gemini. Jotji deliberately doesn’t check what’s on your phone.',
+        link: { label: 'Get Claude on the Play Store', url: 'https://play.google.com/store/apps/details?id=com.anthropic.claude' },
+      },
     ],
   },
   {
@@ -184,22 +201,34 @@ function FaqItem({ faq, expanded, onToggle }: { faq: Faq; expanded: boolean; onT
       </Pressable>
       {expanded ? (
         <View style={styles.answer}>
-          {faq.a.map((p, i) =>
-            p.bullet ? (
-              <View key={i} style={styles.bulletRow}>
-                <AppText variant="bodyMd" color="onSurfaceVariant">
-                  •
-                </AppText>
-                <AppText variant="bodyMd" color="onSurfaceVariant" style={styles.bulletText}>
-                  {p.text}
-                </AppText>
-              </View>
-            ) : (
-              <AppText key={i} variant="bodyMd" color="onSurfaceVariant">
-                {p.text}
-              </AppText>
-            ),
-          )}
+          {faq.a.map((p, i) => {
+            const link = p.link;
+            return (
+              <React.Fragment key={i}>
+                {p.bullet ? (
+                  <View style={styles.bulletRow}>
+                    <AppText variant="bodyMd" color="onSurfaceVariant">
+                      •
+                    </AppText>
+                    <AppText variant="bodyMd" color="onSurfaceVariant" style={styles.bulletText}>
+                      {p.text}
+                    </AppText>
+                  </View>
+                ) : (
+                  <AppText variant="bodyMd" color="onSurfaceVariant">
+                    {p.text}
+                  </AppText>
+                )}
+                {link ? (
+                  <Pressable onPress={() => openUrl(link.url)} hitSlop={6} accessibilityRole="link">
+                    <AppText variant="labelLg" color="primary">
+                      {link.label}
+                    </AppText>
+                  </Pressable>
+                ) : null}
+              </React.Fragment>
+            );
+          })}
         </View>
       ) : null}
     </View>
