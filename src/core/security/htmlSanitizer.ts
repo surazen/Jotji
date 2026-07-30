@@ -114,6 +114,21 @@ function buildAttrs(tag: string, raw: string): string {
 }
 
 /**
+ * True if an `<img>`'s raw attributes include a src we'd actually keep (a local
+ * or data: image — see isSafeImageSrc). Used to drop images whose only src was
+ * remote: rather than leave an empty `<img>` that shows a broken-image
+ * placeholder, we remove the tag entirely (the localized copy lives in the
+ * attachment strip). Parses attributes directly so an alt value that merely
+ * contains "src=" can't be mistaken for a real source.
+ */
+function imgHasSafeSrc(raw: string): boolean {
+  for (const [name, value] of parseAttrs(raw)) {
+    if (name === 'src' && isSafeImageSrc(value)) return true;
+  }
+  return false;
+}
+
+/**
  * Sanitize an HTML string to the allowlist. Disallowed tags are unwrapped
  * (their text content is preserved); script/style/iframe blocks are removed
  * entirely; unsafe URLs and event handlers are stripped.
@@ -141,6 +156,11 @@ export function sanitizeHtml(input: string): string {
     }
     if (slash === '/') {
       return SELF_CLOSING.has(tag) ? '' : `</${tag}>`;
+    }
+    // An image whose src didn't survive the allowlist (e.g. a remote URL) would
+    // render as a broken placeholder — drop the whole tag instead.
+    if (tag === 'img' && !imgHasSafeSrc(attrs)) {
+      return '';
     }
     const rebuilt = buildAttrs(tag, attrs);
     if (SELF_CLOSING.has(tag) || selfClose === '/') {

@@ -51,14 +51,22 @@ describe('sanitizeHtml', () => {
 
   it('drops remote <img> src (tracking-beacon defense) but keeps local + data:image', () => {
     // A remote src would make the editor WebView fetch it on render, leaking the
-    // device IP/time to a third party — so it must not survive sanitization.
-    const remote = sanitizeHtml('<img src="https://tracker.example/pixel.png" alt="x" />');
+    // device IP/time to a third party — so the whole tag must be removed, not
+    // left as an empty <img> that shows a broken-image placeholder.
+    const remote = sanitizeHtml('<p>before</p><img src="https://tracker.example/pixel.png" alt="x" /><p>after</p>');
     expect(remote).not.toContain('tracker.example');
     expect(remote).not.toContain('https://');
+    expect(remote).not.toContain('<img'); // tag dropped entirely, no broken placeholder
+    expect(remote).toContain('<p>before</p>'); // surrounding content preserved
+    expect(remote).toContain('<p>after</p>');
     // On-device and inline-data image sources remain allowed.
     expect(sanitizeHtml('<img src="file:///data/user/0/app/img.png" />')).toContain('file:');
     expect(sanitizeHtml('<img src="content://media/1" />')).toContain('content:');
     expect(sanitizeHtml('<img src="data:image/png;base64,AAAA" />')).toContain('data:image/png');
+  });
+
+  it('drops <img> tags with no src at all', () => {
+    expect(sanitizeHtml('<p>hi</p><img alt="lonely" />')).toBe('<p>hi</p>');
   });
 });
 
