@@ -39,13 +39,28 @@ export async function openPdfExternal(uri: string): Promise<void> {
 
 /** Share the scanned PDF via the OS share sheet (WhatsApp, Gmail, Drive, …). */
 export async function sharePdf(uri: string): Promise<void> {
+  return shareScan(uri, 'Share scan');
+}
+
+/**
+ * Hand the PDF to whatever AI app the user picks from the share sheet (Claude,
+ * Gemini, …) so they can OCR / summarize / extract from it. Same mechanism as
+ * {@link sharePdf} — the file itself is sent (a share intent can't carry a text
+ * prompt with it, so the user asks their question in the AI app). Only the one
+ * document the user chose ever leaves the device, and only when they pick a target.
+ */
+export async function sharePdfToAi(uri: string): Promise<void> {
+  return shareScan(uri, 'Ask AI about this PDF');
+}
+
+async function shareScan(uri: string, dialogTitle: string): Promise<void> {
   try {
     if (!(await Sharing.isAvailableAsync())) {
       toast.error('Sharing is not available on this device');
       return;
     }
     await runProtected(() =>
-      Sharing.shareAsync(uri, { mimeType: PDF_MIME, dialogTitle: 'Share scan', UTI: 'com.adobe.pdf' }),
+      Sharing.shareAsync(uri, { mimeType: PDF_MIME, dialogTitle, UTI: 'com.adobe.pdf' }),
     );
   } catch {
     toast.error('Could not share the scan');

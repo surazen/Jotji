@@ -8,6 +8,7 @@ import { AppText } from '@core/components/Text';
 import { useTheme } from '@core/theme/useTheme';
 import { fileLabelFromMime, mediaKindFromMime } from '@core/utils/files';
 import type { Attachment } from '@core/db/types';
+import { sharePdfToAi } from '@features/scanner/scanActions';
 
 import { openFile } from '../utils/openFile';
 
@@ -99,6 +100,7 @@ export function AttachmentStrip({ attachments, onRemove }: Props) {
         uri={pdfUri}
         title="PDF"
         onClose={() => setPdfUri(null)}
+        onAskAi={pdfUri ? () => sharePdfToAi(pdfUri) : undefined}
       />
     </>
   );

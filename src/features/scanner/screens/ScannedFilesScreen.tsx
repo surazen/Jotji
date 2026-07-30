@@ -19,7 +19,7 @@ import { useResponsive } from '@core/utils/useResponsive';
 import { useTheme } from '@core/theme/useTheme';
 import { NotePicker } from '@features/notes/components/NotePicker';
 import { RenameScanSheet } from '@features/scanner/components/RenameScanSheet';
-import { savePdfToDevice, sharePdf } from '@features/scanner/scanActions';
+import { savePdfToDevice, sharePdf, sharePdfToAi } from '@features/scanner/scanActions';
 import type { RootStackParamList } from '@navigation/types';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -116,6 +116,7 @@ export function ScannedFilesScreen() {
     ? [
         { icon: 'eye', label: 'PDF Preview', onPress: () => setPreviewFile(itemMenu) },
         { icon: 'share-2', label: 'Share', onPress: () => sharePdf(itemMenu.localUri) },
+        { icon: 'zap', label: 'Ask AI about this scan', onPress: () => sharePdfToAi(itemMenu.localUri) },
         { icon: 'file-plus', label: 'Add to note', onPress: () => setAddChoiceFor([itemMenu.id]) },
         { icon: 'edit-3', label: 'Rename', onPress: () => setRenameFile(itemMenu) },
         {

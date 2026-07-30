@@ -16,6 +16,8 @@ type PdfViewerProps = {
   title?: string;
   visible: boolean;
   onClose: () => void;
+  /** When set, a ⚡ button appears in the header to hand this PDF to an AI app. */
+  onAskAi?: () => void;
 };
 
 /**
@@ -23,7 +25,7 @@ type PdfViewerProps = {
  * The document never leaves Jotji — important for the sensitive scans this
  * library holds (IDs, statements, …). Uses react-native-pdf (native renderer).
  */
-export function PdfViewer({ uri, title, visible, onClose }: PdfViewerProps) {
+export function PdfViewer({ uri, title, visible, onClose, onAskAi }: PdfViewerProps) {
   const theme = useTheme();
   const insets = useSafeAreaInsets();
   const [page, setPage] = useState(1);
@@ -63,6 +65,11 @@ export function PdfViewer({ uri, title, visible, onClose }: PdfViewerProps) {
           ) : (
             <View style={styles.title} />
           )}
+          {onAskAi ? (
+            <PressableScale onPress={onAskAi} hitSlop={12} accessibilityLabel="Ask AI about this PDF">
+              <Icon name="zap" size={22} color="onPrimary" />
+            </PressableScale>
+          ) : null}
           {pageCount > 0 ? (
             <AppText variant="labelMd" color="onPrimary">
               {page} / {pageCount}
