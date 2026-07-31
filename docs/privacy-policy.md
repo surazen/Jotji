@@ -78,12 +78,4 @@ at the same URL. Continued use of the app after a change means you accept the up
 
 If you have any questions about this policy or your privacy, contact:
 
-**<DEVELOPER_NAME>** — **<CONTACT_EMAIL>**
-
-<!--
-BEFORE PUBLISHING, fill in the two placeholders above:
-  <DEVELOPER_NAME>  = the developer name shown on your Play Console listing
-  <CONTACT_EMAIL>   = a public contact email (consider a dedicated address, not a personal one)
-Host this file at a public URL (e.g. GitHub Pages) and paste that URL into
-Play Console → App content → Privacy policy.
--->
+**Surazen** — **sura@southofmemphis.com**
