@@ -56,7 +56,9 @@ export function PdfViewer({ uri, title, visible, onClose, onAskAi }: PdfViewerPr
       <View style={[styles.backdrop, { backgroundColor: theme.colors.scrim }]}>
         <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
           <PressableScale onPress={onClose} hitSlop={12} accessibilityLabel="Close preview">
-            <Icon name="x" size={24} color="onPrimary" />
+            <View style={styles.iconChip}>
+              <Icon name="x" size={22} color="onPrimary" />
+            </View>
           </PressableScale>
           {title ? (
             <AppText variant="titleSm" color="onPrimary" numberOfLines={1} style={styles.title}>
@@ -67,7 +69,9 @@ export function PdfViewer({ uri, title, visible, onClose, onAskAi }: PdfViewerPr
           )}
           {onAskAi ? (
             <PressableScale onPress={onAskAi} hitSlop={12} accessibilityLabel="Ask AI about this PDF">
-              <Icon name="zap" size={22} color="onPrimary" />
+              <View style={styles.iconChip}>
+                <Icon name="zap" size={20} color="onPrimary" />
+              </View>
             </PressableScale>
           ) : null}
           {pageCount > 0 ? (
@@ -112,6 +116,15 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
   },
   title: { flex: 1 },
+  // A translucent dark disc keeps the header icons legible over any PDF page.
+  iconChip: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   counterSpacer: { width: 1 },
   pdf: { flex: 1, backgroundColor: 'transparent' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 },

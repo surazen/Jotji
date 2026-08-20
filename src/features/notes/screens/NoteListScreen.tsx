@@ -4,6 +4,7 @@ import { FlashList } from '@shopify/flash-list';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+import { ConfirmDialog } from '@core/components/ConfirmDialog';
 import { ContextMenu, type ContextAction } from '@core/components/ContextMenu';
 import { EmptyState } from '@core/components/EmptyState';
 import { Icon } from '@core/components/Icon';
@@ -36,6 +37,7 @@ export function NoteListScreen() {
   const { notes, pinned, loading, load, togglePin, deleteNote } = useNotesStore();
   const [menuNote, setMenuNote] = useState<NoteWithRelations | null>(null);
   const [moveNote, setMoveNote] = useState<NoteWithRelations | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<NoteWithRelations | null>(null);
   const [showGreeting, setShowGreeting] = useState(!greetingConsumed);
 
   useFocusEffect(
@@ -75,7 +77,7 @@ export function NoteListScreen() {
           icon: 'trash-2',
           label: 'Delete',
           destructive: true,
-          onPress: () => deleteNote(menuNote.id),
+          onPress: () => setConfirmDelete(menuNote),
         },
       ]
     : [];
@@ -150,6 +152,18 @@ export function NoteListScreen() {
         onClose={() => setMenuNote(null)}
         title={menuNote?.title || 'Note'}
         actions={menuActions}
+      />
+
+      <ConfirmDialog
+        visible={!!confirmDelete}
+        title="Delete note?"
+        message="This note and its attachments will be permanently deleted. This can’t be undone."
+        confirmLabel="Delete"
+        onClose={() => setConfirmDelete(null)}
+        onConfirm={() => {
+          if (confirmDelete) deleteNote(confirmDelete.id);
+          setConfirmDelete(null);
+        }}
       />
 
       <NotebookPicker

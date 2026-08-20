@@ -3,6 +3,7 @@
  * a note). Both consume the same cache PDF that {@link scanDocument} produces.
  * "Attach to a note" lives with the caller instead — it needs navigation.
  */
+import { File, Paths } from 'expo-file-system';
 import {
   getContentUriAsync,
   readAsStringAsync,
@@ -37,9 +38,30 @@ export async function openPdfExternal(uri: string): Promise<void> {
   }
 }
 
+/**
+ * A share sheet sends the file under its on-disk name, which is the opaque
+ * `<id>.pdf` we store scans as. When the user has given the scan a friendly
+ * name, copy it into the cache under `<name>.pdf` first so the recipient sees
+ * that name. Falls back to the original file if the copy fails. The cache copy
+ * is short-lived and cleaned up by the OS.
+ */
+function scanShareUri(uri: string, displayName?: string): string {
+  if (!displayName) return uri;
+  const base = displayName.replace(/\.pdf$/i, '').replace(/[/\\:*?"<>|]+/g, '_').trim();
+  if (!base) return uri;
+  try {
+    const dest = new File(Paths.cache, `${base}.pdf`);
+    if (dest.exists) dest.delete();
+    new File(uri).copySync(dest);
+    return dest.uri;
+  } catch {
+    return uri;
+  }
+}
+
 /** Share the scanned PDF via the OS share sheet (WhatsApp, Gmail, Drive, …). */
-export async function sharePdf(uri: string): Promise<void> {
-  return shareScan(uri, 'Share scan');
+export async function sharePdf(uri: string, displayName?: string): Promise<void> {
+  return shareScan(uri, 'Share scan', displayName);
 }
 
 /**
@@ -49,18 +71,19 @@ export async function sharePdf(uri: string): Promise<void> {
  * prompt with it, so the user asks their question in the AI app). Only the one
  * document the user chose ever leaves the device, and only when they pick a target.
  */
-export async function sharePdfToAi(uri: string): Promise<void> {
-  return shareScan(uri, 'Ask AI about this PDF');
+export async function sharePdfToAi(uri: string, displayName?: string): Promise<void> {
+  return shareScan(uri, 'Ask AI about this PDF', displayName);
 }
 
-async function shareScan(uri: string, dialogTitle: string): Promise<void> {
+async function shareScan(uri: string, dialogTitle: string, displayName?: string): Promise<void> {
   try {
     if (!(await Sharing.isAvailableAsync())) {
       toast.error('Sharing is not available on this device');
       return;
     }
+    const shareUri = scanShareUri(uri, displayName);
     await runProtected(() =>
-      Sharing.shareAsync(uri, { mimeType: PDF_MIME, dialogTitle, UTI: 'com.adobe.pdf' }),
+      Sharing.shareAsync(shareUri, { mimeType: PDF_MIME, dialogTitle, UTI: 'com.adobe.pdf' }),
     );
   } catch {
     toast.error('Could not share the scan');

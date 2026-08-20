@@ -11,10 +11,24 @@ type RenameScanSheetProps = {
   filename: string;
   onClose: () => void;
   onSubmit: (name: string) => void;
+  /** Sheet heading (e.g. "Name your scan" when naming right after a capture). */
+  title?: string;
+  submitLabel?: string;
 };
 
-/** Rename a scan. Edits the base name; the ".pdf" suffix is managed for the user. */
-export function RenameScanSheet({ visible, filename, onClose, onSubmit }: RenameScanSheetProps) {
+/**
+ * Rename a scan. Edits the base name; the ".pdf" suffix is managed for the user.
+ * The parent owns dismissal (via `onSubmit`/`onClose`), so it can chain the next
+ * step — e.g. the name-on-capture flow opens the share/save menu afterward.
+ */
+export function RenameScanSheet({
+  visible,
+  filename,
+  onClose,
+  onSubmit,
+  title = 'Rename scan',
+  submitLabel = 'Save',
+}: RenameScanSheetProps) {
   const [name, setName] = useState('');
 
   useEffect(() => {
@@ -24,12 +38,11 @@ export function RenameScanSheet({ visible, filename, onClose, onSubmit }: Rename
   const submit = () => {
     const trimmed = name.trim();
     if (!trimmed) return;
-    onClose();
     onSubmit(trimmed);
   };
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} title="Rename scan">
+    <BottomSheet visible={visible} onClose={onClose} title={title}>
       <View style={styles.body}>
         <TextField
           label="Name"
@@ -41,7 +54,7 @@ export function RenameScanSheet({ visible, filename, onClose, onSubmit }: Rename
           returnKeyType="done"
           onSubmitEditing={submit}
         />
-        <Button label="Save" onPress={submit} style={styles.cta} />
+        <Button label={submitLabel} onPress={submit} style={styles.cta} />
       </View>
     </BottomSheet>
   );

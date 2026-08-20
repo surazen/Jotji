@@ -55,17 +55,29 @@ export function NoteCard({
         </View>
       )}
       renderRightActions={() => (
-        <View style={[styles.action, styles.right, { backgroundColor: theme.colors.errorContainer }]}>
+        <Pressable
+          onPress={() => {
+            ref.current?.close();
+            onDelete();
+          }}
+          accessibilityRole="button"
+          accessibilityLabel="Delete note"
+          style={[styles.action, styles.right, { backgroundColor: theme.colors.errorContainer }]}
+        >
           <Icon name="trash-2" color="onErrorContainer" />
           <AppText variant="labelMd" color="onErrorContainer">
             Delete
           </AppText>
-        </View>
+        </Pressable>
       )}
       onSwipeableOpen={(direction) => {
-        ref.current?.close();
-        if (direction === 'left') onTogglePin();
-        else onDelete();
+        // Pin is reversible, so a swipe fires it immediately. Delete is
+        // permanent (no undo), so the swipe only REVEALS the button — the row
+        // stays open and the user must tap Delete to actually remove the note.
+        if (direction === 'left') {
+          ref.current?.close();
+          onTogglePin();
+        }
       }}
     >
       <PressableScale

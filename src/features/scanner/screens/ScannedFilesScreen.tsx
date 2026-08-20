@@ -115,8 +115,12 @@ export function ScannedFilesScreen() {
   const itemActions: ContextAction[] = itemMenu
     ? [
         { icon: 'eye', label: 'PDF Preview', onPress: () => setPreviewFile(itemMenu) },
-        { icon: 'share-2', label: 'Share', onPress: () => sharePdf(itemMenu.localUri) },
-        { icon: 'zap', label: 'Ask AI about this scan', onPress: () => sharePdfToAi(itemMenu.localUri) },
+        { icon: 'share-2', label: 'Share', onPress: () => sharePdf(itemMenu.localUri, itemMenu.filename) },
+        {
+          icon: 'zap',
+          label: 'Ask AI about this scan',
+          onPress: () => sharePdfToAi(itemMenu.localUri, itemMenu.filename),
+        },
         { icon: 'file-plus', label: 'Add to note', onPress: () => setAddChoiceFor([itemMenu.id]) },
         { icon: 'edit-3', label: 'Rename', onPress: () => setRenameFile(itemMenu) },
         {
@@ -256,6 +260,7 @@ export function ScannedFilesScreen() {
         onClose={() => setRenameFile(null)}
         onSubmit={(name) => {
           if (renameFile) void rename(renameFile.id, name);
+          setRenameFile(null);
         }}
       />
 

@@ -4,6 +4,7 @@ import { FlashList } from '@shopify/flash-list';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
+import { ConfirmDialog } from '@core/components/ConfirmDialog';
 import { ContextMenu, type ContextAction } from '@core/components/ContextMenu';
 import { Icon } from '@core/components/Icon';
 import { Screen } from '@core/components/Screen';
@@ -42,6 +43,7 @@ export function NotebooksScreen() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<NotebookWithCount | null>(null);
   const [menuFor, setMenuFor] = useState<NotebookWithCount | null>(null);
+  const [confirmDeleteNb, setConfirmDeleteNb] = useState<NotebookWithCount | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -56,7 +58,7 @@ export function NotebooksScreen() {
           icon: 'trash-2',
           label: 'Delete notebook',
           destructive: true,
-          onPress: () => remove(menuFor.id),
+          onPress: () => setConfirmDeleteNb(menuFor),
         },
       ]
     : [];
@@ -144,6 +146,27 @@ export function NotebooksScreen() {
         onClose={() => setMenuFor(null)}
         title={menuFor?.name}
         actions={menuActions}
+      />
+
+      <ConfirmDialog
+        visible={!!confirmDeleteNb}
+        title="Delete notebook?"
+        message={
+          confirmDeleteNb
+            ? confirmDeleteNb.noteCount > 0
+              ? `“${confirmDeleteNb.name}” contains ${confirmDeleteNb.noteCount} ${
+                  confirmDeleteNb.noteCount === 1 ? 'note' : 'notes'
+                }. Deleting the notebook keeps those notes and moves them to General.`
+              : `“${confirmDeleteNb.name}” will be deleted.`
+            : undefined
+        }
+        confirmLabel="Delete"
+        onClose={() => setConfirmDeleteNb(null)}
+        onConfirm={async () => {
+          const nb = confirmDeleteNb;
+          setConfirmDeleteNb(null);
+          if (nb) await remove(nb.id);
+        }}
       />
     </Screen>
   );
