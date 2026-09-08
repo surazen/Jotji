@@ -11,6 +11,7 @@ import { StackHeader } from '@core/components/StackHeader';
 import { AppText } from '@core/components/Text';
 import { toast } from '@core/components/Toast';
 import { canUseAppLock, authenticate } from '@core/security/appLock';
+import { BackupRestore } from '@features/backup/BackupRestore';
 import { NotebookPicker } from '@features/notebooks/components/NotebookPicker';
 import { useNotebooksStore } from '@features/notebooks/store/notebooksStore';
 import { useNotesStore } from '@features/notes/store/notesStore';
@@ -219,6 +220,10 @@ export function SettingsScreen() {
               How to export from Evernote (desktop only)
             </AppText>
           </Pressable>
+        </Section>
+
+        <Section title="Backup">
+          <BackupRestore />
         </Section>
       </ScrollView>
 

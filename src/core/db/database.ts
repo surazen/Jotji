@@ -101,7 +101,22 @@ export async function transaction(
   });
 }
 
-/** Absolute on-disk path to the database file (used by diagnostics/tests). */
+/**
+ * Absolute on-disk path to the database file. Note: `getDbPath` must be called
+ * with NO argument — it returns `<baseDir>/<thisDbName>`. Passing the name as an
+ * argument makes op-sqlite treat it as a *location*, append it, and then
+ * `create_directories()` on a path that is actually a file (throws natively).
+ */
 export function databasePath(): string {
-  return getDb().getDbPath(DB_NAME);
+  return getDb().getDbPath();
+}
+
+/**
+ * Directory that holds the SQLite files. The backup archive is a second
+ * SQLCipher database created/opened in the same directory (op-sqlite resolves a
+ * plain `name` against this default location).
+ */
+export function databaseDirectory(): string {
+  const p = databasePath().replace(/^file:\/\//, '');
+  return p.slice(0, p.lastIndexOf('/'));
 }

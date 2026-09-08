@@ -123,6 +123,21 @@ export async function persistBase64ToSandbox(
   return { uri: written.uri, size: written.size ?? null };
 }
 
+/**
+ * Write a base64-encoded scanned PDF straight into the scan-library sandbox.
+ * Used by the backup restore path, which carries scan bytes inside the archive.
+ */
+export async function persistBase64ScanToSandbox(
+  base64: string,
+  id: string,
+): Promise<{ uri: string; size: number | null }> {
+  const dir = scansDir();
+  const dest = new File(dir, `${id}.pdf`);
+  await writeAsStringAsync(dest.uri, base64.replace(/\s/g, ''), { encoding: 'base64' });
+  const written = new File(dest.uri);
+  return { uri: written.uri, size: written.size ?? null };
+}
+
 /** Image-only variant kept for callers that must reject non-images. */
 export function persistImageToSandbox(
   sourceUri: string,

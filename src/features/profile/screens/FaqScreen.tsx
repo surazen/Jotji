@@ -158,10 +158,10 @@ const FAQS: Faq[] = [
         text: 'Your notes stay in an encrypted database on this device only. There is no account and no cloud, so nothing is uploaded anywhere.',
       },
       {
-        text: 'For that same privacy reason, Jotji’s data is not included in your phone’s backup. If the device is lost or reset, or you uninstall the app, the notes can’t be recovered.',
+        text: 'For that same privacy reason, Jotji’s data is not included in your phone’s automatic backup. So that a lost, reset, or reinstalled device doesn’t take your notes with it, make your own backup: Settings → Backup → Back up notes.',
       },
       {
-        text: 'A way to export your notes is on the roadmap. Until then, treat anything important as living only on this device.',
+        text: 'That saves one file — all your notes, notebooks, tags, attachments and scans — to Drive or your files. Reinstall Jotji (or set up a new phone), tap Restore from backup, and everything comes back. You can optionally protect the file with a passphrase; if you do, keep it somewhere safe, because it can’t be recovered.',
       },
     ],
   },
