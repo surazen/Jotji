@@ -21,7 +21,8 @@ import { open, type DB, type Scalar } from '@op-engineering/op-sqlite';
 import { File } from 'expo-file-system';
 import { readAsStringAsync } from 'expo-file-system/legacy';
 
-import { persistBase64ScanToSandbox, persistBase64ToSandbox } from '../utils/files';
+import { sanitizeHtml } from '../security/htmlSanitizer';
+import { isAllowedAttachmentMime, persistBase64ScanToSandbox, persistBase64ToSandbox } from '../utils/files';
 import { all, databaseDirectory, first, run, transaction } from './database';
 
 const FORMAT_VERSION = 1;
@@ -94,6 +95,15 @@ type Row = Record<string, Scalar>;
 
 function toUri(path: string): string {
   return path.startsWith('file://') ? path : `file://${path}`;
+}
+
+/**
+ * Restore names sandbox files after the row id. A tampered backup could smuggle
+ * path separators (e.g. "../../evil") to escape the sandbox, so only UUID-shaped
+ * ids are trusted for anything that becomes a file path. Real ids are randomUUID.
+ */
+function isSafeId(id: unknown): id is string {
+  return typeof id === 'string' && /^[A-Za-z0-9_-]{1,128}$/.test(id);
 }
 
 /** Best-effort removal of a SQLite file and any journal/WAL siblings. */
@@ -276,7 +286,9 @@ export async function restoreBackupArchive(
 
     await transaction(async (tx) => {
       for (const r of notebooks) await tx.run(MERGE.notebook, [r.id, r.name, r.color, r.created_at, r.updated_at]);
-      for (const r of notes) await tx.run(MERGE.note, [r.id, r.notebook_id, r.title, r.body_html, r.body_plain, r.is_pinned, r.created_at, r.updated_at]);
+      // Re-sanitize note HTML on the way in — a backup can come from an
+      // untrusted source, and restore bypasses the editor's save-time sanitize.
+      for (const r of notes) await tx.run(MERGE.note, [r.id, r.notebook_id, r.title, sanitizeHtml(String(r.body_html ?? '')), r.body_plain, r.is_pinned, r.created_at, r.updated_at]);
       for (const r of tags) await tx.run(MERGE.tag, [r.id, r.name, r.created_at]);
       for (const r of noteTags) await tx.run(MERGE.noteTag, [r.note_id, r.tag_id]);
       for (const r of settings) await tx.run(MERGE.setting, [r.key, r.value]);
@@ -331,20 +343,23 @@ async function restoreFiles(archive: DB, kind: 'attachments' | 'scans', blobTabl
   if (kind === 'attachments') {
     const rows = await readRows(archive, 'SELECT id, note_id, mime, width, height, created_at FROM attachments');
     for (const a of rows) {
-      if (await first('SELECT 1 AS x FROM attachments WHERE id = ?', [a.id as string])) continue;
-      const b64 = await readBlob(archive, blobTable, a.id as string);
+      if (!isSafeId(a.id)) continue; // reject path-traversal ids from a tampered archive
+      if (!isAllowedAttachmentMime(a.mime as string)) continue; // never materialise an unexpected type
+      if (await first('SELECT 1 AS x FROM attachments WHERE id = ?', [a.id])) continue;
+      const b64 = await readBlob(archive, blobTable, a.id);
       if (!b64) continue; // no bytes captured → can't restore a usable attachment
-      const { uri, size } = await persistBase64ToSandbox(b64, a.id as string, a.mime as string);
+      const { uri, size } = await persistBase64ToSandbox(b64, a.id, a.mime as string);
       await run(MERGE.attachment, [a.id, a.note_id, uri, a.mime, a.width, a.height, size, a.created_at]);
     }
     return;
   }
   const rows = await readRows(archive, 'SELECT id, filename, created_at FROM scanned_files');
   for (const s of rows) {
-    if (await first('SELECT 1 AS x FROM scanned_files WHERE id = ?', [s.id as string])) continue;
-    const b64 = await readBlob(archive, blobTable, s.id as string);
+    if (!isSafeId(s.id)) continue; // reject path-traversal ids from a tampered archive
+    if (await first('SELECT 1 AS x FROM scanned_files WHERE id = ?', [s.id])) continue;
+    const b64 = await readBlob(archive, blobTable, s.id);
     if (!b64) continue;
-    const { uri, size } = await persistBase64ScanToSandbox(b64, s.id as string);
+    const { uri, size } = await persistBase64ScanToSandbox(b64, s.id);
     await run(MERGE.scan, [s.id, s.filename, uri, size, s.created_at]);
   }
 }
