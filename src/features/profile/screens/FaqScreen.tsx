@@ -27,6 +27,51 @@ async function openUrl(url: string): Promise<void> {
 
 const FAQS: Faq[] = [
   {
+    q: 'How do I create, edit and delete a note?',
+    a: [
+      {
+        text: 'Create: tap the ➕ button in the middle of the bottom bar to start a new note. Give it a title and type your text — there’s no Save button, everything you write is saved automatically.',
+      },
+      {
+        text: 'Edit: tap any note on Home or in a notebook to open and change it. Your edits save as you go.',
+      },
+      {
+        text: 'Delete a note in one of two ways:',
+      },
+      {
+        text: 'Open its menu (long-press the note, or tap the ⋮) and choose Delete, then confirm.',
+        bullet: true,
+      },
+      {
+        text: 'Or swipe the note in the list to reveal a Delete button, and tap it.',
+        bullet: true,
+      },
+      {
+        text: 'Deleting a note is permanent — there’s no cloud undo — so if a note might matter later, back it up first (Settings → Backup).',
+      },
+    ],
+  },
+  {
+    q: 'How do I scan a document, and save it or add it to a note?',
+    a: [
+      {
+        text: 'Tap the Scan tab in the bottom bar to scan with your camera. Line up the page, capture, and crop. To put several pages in one PDF, tap the blue “add page” button (a page with a +) before you finish.',
+      },
+      {
+        text: 'Right after scanning you can give it a name, then choose what to do with it:',
+      },
+      { text: 'Share — send the PDF to another app', bullet: true },
+      { text: 'Save to device — store the PDF in your files (Downloads, Drive, …)', bullet: true },
+      { text: 'Add to a note — attach it to a new note', bullet: true },
+      {
+        text: 'Scans made from the Scan tab are also kept in the Scanned files library (the folder icon at the top of Home), where you can preview, rename, share, save, add to a note, or delete them any time.',
+      },
+      {
+        text: 'You can also scan while editing a note (the Scan button above the keyboard) — that attaches the PDF straight to that note instead.',
+      },
+    ],
+  },
+  {
     q: 'What’s the difference between notebooks and tags?',
     a: [
       {
@@ -105,6 +150,23 @@ const FAQS: Faq[] = [
       },
       {
         text: 'Your original note dates are kept, and imported notes carry an “en import” tag. Images stored in the note come across too; images that were only linked from the web are downloaded if you allow it.',
+      },
+    ],
+  },
+  {
+    q: 'How do I back up my notes, and restore them?',
+    a: [
+      {
+        text: 'Everything stays on your device with no cloud, so make your own backup — that way a lost, reset, or reinstalled phone doesn’t take your notes with it.',
+      },
+      {
+        text: 'Back up: go to Settings → Backup → Back up notes and choose where to save the file (Google Drive, your Files, a computer). It’s a single file holding everything — notes, notebooks, tags, attachments and scans.',
+      },
+      {
+        text: 'Encrypt (optional): turn on “Encrypt with a passphrase” if you’ll keep the file somewhere you don’t fully trust. Keep that passphrase safe — Jotji can’t recover it, so if you forget it the backup can’t be opened.',
+      },
+      {
+        text: 'Restore: on the same phone or a new one, install Jotji, then go to Settings → Backup → Restore from backup and pick your file (enter the passphrase if you set one). Restoring adds everything back and skips anything already there, so it never makes duplicates — it’s safe to run more than once.',
       },
     ],
   },

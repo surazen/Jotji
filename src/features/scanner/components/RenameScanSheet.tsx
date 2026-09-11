@@ -50,7 +50,6 @@ export function RenameScanSheet({
           onChangeText={setName}
           placeholder="e.g. Passport"
           autoFocus
-          selectTextOnFocus
           returnKeyType="done"
           onSubmitEditing={submit}
         />

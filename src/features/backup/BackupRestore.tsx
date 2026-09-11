@@ -128,7 +128,9 @@ export function BackupRestore() {
               value={encrypt}
               onValueChange={setEncrypt}
               trackColor={{ true: theme.colors.primary, false: theme.colors.surfaceContainerHighest }}
-              thumbColor={theme.colors.surfaceContainerLowest}
+              // Contrasting thumb in both themes/states — surfaceContainerLowest
+              // is near-black in dark mode and vanishes on the dark "off" track.
+              thumbColor={encrypt ? theme.colors.onPrimary : theme.colors.onSurfaceVariant}
             />
           </View>
           <Button

@@ -31,7 +31,9 @@ export function SettingsRow({ icon, label, value, onPress, toggle }: SettingsRow
           value={toggle.value}
           onValueChange={toggle.onValueChange}
           trackColor={{ true: theme.colors.primary, false: theme.colors.surfaceContainerHighest }}
-          thumbColor={theme.colors.surfaceContainerLowest}
+          // Contrasting thumb in both themes/states — surfaceContainerLowest is
+          // near-black in dark mode and vanishes on the dark "off" track.
+          thumbColor={toggle.value ? theme.colors.onPrimary : theme.colors.onSurfaceVariant}
         />
       ) : (
         <View style={styles.right}>
