@@ -85,6 +85,7 @@ export function ProfileScreen() {
             onPress={() => navigation.navigate('Onboarding', { fromProfile: true })}
           />
           <SettingsRow icon="heart" label="Support Jotji" onPress={() => navigation.navigate('Support')} />
+          <SettingsRow icon="shield" label="Privacy policy" onPress={() => navigation.navigate('Privacy')} />
         </View>
 
         <AppText variant="bodySm" color="onSurfaceVariant" style={styles.footer}>

@@ -1,6 +1,6 @@
 # Privacy Policy for Jotji
 
-**Last updated: 31 July 2026**
+**Last updated: 11 September 2026**
 
 Jotji ("the app", "we", "us") is a local-first note-taking app for Android. This policy
 explains what data the app handles and how your privacy is protected. In short: **Jotji has
@@ -26,8 +26,8 @@ documents you scan — is saved in an **encrypted database on your device**. Thi
 - is not included in Android's automatic cloud backup (the app sets `allowBackup` to false),
   precisely so your notes are not copied off the device.
 
-Because there is no cloud copy, **if you uninstall the app or reset/lose your device, your
-notes cannot be recovered by us or anyone else.**
+Because there is no cloud copy, **if you uninstall the app or reset/lose your device, notes that
+you have not backed up yourself cannot be recovered by us or anyone else.**
 
 ## Permissions the app requests
 
@@ -57,6 +57,9 @@ only to the destination **you** choose. Jotji itself never receives this data.
   image's host; we do not see it.
 - **External links** — Links such as the "Support Jotji" donation page or a Play Store link open
   in your browser or the Play Store app. Those services have their own privacy policies.
+- **Backup** — When you create a backup (Settings → Backup), the file is written only to the
+  location you choose (for example your device storage or a cloud drive you pick). Jotji does not
+  upload it anywhere; where the file then lives is governed by whatever service you saved it to.
 
 ## Data sharing and selling
 
@@ -68,6 +71,18 @@ never sends your data to us in the first place.
 Jotji is not directed to children under 13, and we do not knowingly collect any personal
 information from anyone. Since the app collects no personal information at all, this poses no
 additional risk.
+
+## Disclaimer and your responsibility for backups
+
+Jotji is provided "as is", without warranties of any kind, whether express or implied, including
+but not limited to merchantability, fitness for a particular purpose, and non-infringement. To the
+fullest extent permitted by law, the developer is not liable for any loss of data or for any
+direct, indirect, incidental, or consequential damages arising from your use of the app.
+
+Because Jotji stores everything only on your device with no cloud copy, keeping your data safe is
+your responsibility. Use the built-in Backup feature (Settings → Backup) to save your own copy, and
+keep that backup — and any passphrase you set for it — somewhere safe. A forgotten passphrase cannot
+be recovered, and neither the developer nor anyone else can restore notes that were not backed up.
 
 ## Changes to this policy
 

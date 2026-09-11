@@ -6,6 +6,7 @@ import { NotebookDetailScreen } from '@features/notebooks/screens/NotebookDetail
 import { NoteEditorScreen } from '@features/notes/screens/NoteEditorScreen';
 import { OnboardingScreen } from '@features/onboarding/screens/OnboardingScreen';
 import { FaqScreen } from '@features/profile/screens/FaqScreen';
+import { PrivacyScreen } from '@features/profile/screens/PrivacyScreen';
 import { SettingsScreen } from '@features/profile/screens/SettingsScreen';
 import { useSettingsStore } from '@features/profile/store/settingsStore';
 import { SearchScreen } from '@features/search/screens/SearchScreen';
@@ -38,6 +39,7 @@ export function RootNavigator() {
       <Stack.Screen name="NotebookDetail" component={NotebookDetailScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
       <Stack.Screen name="Faq" component={FaqScreen} />
+      <Stack.Screen name="Privacy" component={PrivacyScreen} />
       <Stack.Screen name="Support" component={SupportScreen} />
     </Stack.Navigator>
   );

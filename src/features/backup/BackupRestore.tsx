@@ -105,7 +105,9 @@ export function BackupRestore() {
       <SettingsRow icon="upload" label="Restore from backup" onPress={startRestore} />
       <AppText variant="bodySm" color="onSurfaceVariant" style={styles.note}>
         Save a copy of everything — notes, notebooks, tags, attachments and scans — to Drive or your
-        files, so you can restore it after reinstalling or on a new phone.
+        files, so you can restore it after reinstalling or on a new phone. Jotji keeps everything on
+        this device only, so if you don’t keep your own backup, notes can’t be recovered after a
+        reset, uninstall, or lost phone.
       </AppText>
 
       <BottomSheet visible={flow === 'options'} onClose={() => setFlow(null)} title="Back up notes">
