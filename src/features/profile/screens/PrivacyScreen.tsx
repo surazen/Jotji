@@ -9,9 +9,10 @@ import { useResponsive } from '@core/utils/useResponsive';
 
 /**
  * Offline, in-app copy of the privacy policy (Profile → Privacy policy). Kept in
- * sync with docs/privacy-policy.md and docs/privacy.html (the Netlify page Play
- * links to). Rendered natively — no WebView, no network — so it can be read
- * fully offline, in keeping with the app's on-device promise.
+ * sync with docs/privacy-policy.md and docs/privacy.html (the hosted page at
+ * jotji.com/privacy that the Play listing links to). Rendered natively — no
+ * WebView, no network — so it can be read fully offline, in keeping with the
+ * app's on-device promise.
  */
 const CONTACT_EMAIL = 'sura@southofmemphis.com';
 
