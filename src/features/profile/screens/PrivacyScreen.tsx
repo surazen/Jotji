@@ -40,7 +40,7 @@ const POLICY: Block[] = [
 
   { kind: 'h', text: 'Features you control (and when data leaves your device)' },
   { kind: 'p', text: 'Some optional features can send data off your device — but only when you initiate them, and only to the destination you choose. Jotji itself never receives this data.' },
-  { kind: 'bullet', text: 'Sharing a note or scan — the system share sheet lets you send the selected note or document to another app you have installed. Only the item you selected is shared, only to the app you pick, and it is then governed by that app’s privacy policy.' },
+  { kind: 'bullet', text: 'Sharing a note or scan — the system share sheet lets you send the selected note or document to another app you have installed. Only the item you pick is shared. Once it leaves Jotji, that content is handled under the receiving app’s own terms and privacy policy — including any AI assistant that reads, stores, or processes it — and Jotji has no control over, and is not responsible for, what happens to it there.' },
   { kind: 'bullet', text: 'Importing from Evernote — if you import an export that contains images linked from the web, Jotji can optionally download those images for offline use, only after you agree, directly between your device and the image’s host.' },
   { kind: 'bullet', text: 'External links — links such as the “Support Jotji” page or a Play Store link open in your browser or the Play Store app, which have their own privacy policies.' },
   { kind: 'bullet', text: 'Backup — when you create a backup (Settings → Backup), the file is written only to the location you choose. Jotji does not upload it anywhere.' },
@@ -55,7 +55,7 @@ const POLICY: Block[] = [
   { kind: 'p', text: 'Jotji is not directed to children under 13, and we do not knowingly collect any personal information from anyone. Since the app collects no personal information at all, this poses no additional risk.' },
 
   { kind: 'h', text: 'Disclaimer and your responsibility for backups' },
-  { kind: 'p', text: 'Jotji is provided “as is”, without warranties of any kind, whether express or implied, including but not limited to merchantability, fitness for a particular purpose, and non-infringement. To the fullest extent permitted by law, the developer is not liable for any loss of data or for any direct, indirect, incidental, or consequential damages arising from your use of the app.' },
+  { kind: 'p', text: 'Jotji is provided “as is”, without warranties of any kind, whether express or implied, including but not limited to merchantability, fitness for a particular purpose, and non-infringement. To the fullest extent permitted by law, the developer is not liable for any loss of data or for any direct, indirect, incidental, or consequential damages arising from your use of the app. Jotji is also not responsible for how any third-party app or service you choose to share content with — including AI assistants — stores, processes, or uses that content; once you send it, that is governed by the other provider’s own terms and privacy policy.' },
   { kind: 'p', text: 'Because Jotji stores everything only on your device with no cloud copy, keeping your data safe is your responsibility. Use the built-in Backup feature (Settings → Backup) to save your own copy, and keep that backup — and any passphrase you set for it — somewhere safe. A forgotten passphrase cannot be recovered, and neither the developer nor anyone else can restore notes that were not backed up.' },
 
   { kind: 'h', text: 'Changes to this policy' },

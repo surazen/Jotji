@@ -187,6 +187,9 @@ const FAQS: Faq[] = [
         text: 'The summary appears in the other app. To keep it, copy it back into your note. Your notebooks stay private — only the notes you deliberately share this way are ever sent anywhere.',
       },
       {
+        text: 'Once a note or scan leaves Jotji for another app, it’s handled under that app’s terms and privacy policy — not Jotji’s. It’s worth checking the AI app’s policy to see how it uses what you send, because Jotji can’t control, and isn’t responsible for, what happens to your content inside it.',
+      },
+      {
         text: 'You can do the same with a scanned document: open a scan (from the Scanned files library or a PDF inside a note) and tap the ⚡ button, or use Ask AI about this scan in the scan’s menu. This is handy for reading, summarizing, or pulling details out of a scan. It works if the AI app you pick accepts PDF files — some only take photos.',
       },
       {

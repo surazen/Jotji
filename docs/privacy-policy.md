@@ -49,8 +49,10 @@ only to the destination **you** choose. Jotji itself never receives this data.
   "Ask AI about this scan", or the standard Share action), Android's system share sheet lets you
   send the selected note or document to another app you have installed (such as an AI assistant,
   a messaging app, or email). Only the item you selected is shared, only to the app you pick, and
-  it is then governed by **that app's** privacy policy. Jotji does not choose the destination and
-  does not transmit the content itself.
+  Jotji does not choose the destination or transmit the content itself. **Once it leaves Jotji, that
+  content is handled under the receiving app's own terms and privacy policy — including any AI
+  assistant that reads, stores, or processes it — and Jotji has no control over, and is not
+  responsible for, what happens to it there.**
 - **Importing from Evernote** — If you import an Evernote export that contains images linked from
   the web, Jotji can optionally download those images so they are available offline. This only
   happens **after you agree** to it, and the download goes directly between your device and the
@@ -85,7 +87,10 @@ additional risk.
 Jotji is provided "as is", without warranties of any kind, whether express or implied, including
 but not limited to merchantability, fitness for a particular purpose, and non-infringement. To the
 fullest extent permitted by law, the developer is not liable for any loss of data or for any
-direct, indirect, incidental, or consequential damages arising from your use of the app.
+direct, indirect, incidental, or consequential damages arising from your use of the app. Jotji is
+also not responsible for how any third-party app or service you choose to share content with —
+including AI assistants — stores, processes, or uses that content; once you send it, that is
+governed by the other provider's own terms and privacy policy.
 
 Because Jotji stores everything only on your device with no cloud copy, keeping your data safe is
 your responsibility. Use the built-in Backup feature (Settings → Backup) to save your own copy, and
