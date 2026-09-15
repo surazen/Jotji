@@ -61,13 +61,17 @@ const FAQS: Faq[] = [
         text: 'Right after scanning you can give it a name, then choose what to do with it:',
       },
       { text: 'Share — send the PDF to another app', bullet: true },
-      { text: 'Save to device — store the PDF in your files (Downloads, Drive, …)', bullet: true },
+      { text: 'Save as PDF — store the PDF in your files (Downloads, Drive, …)', bullet: true },
+      { text: 'Save as JPG — save each page as an image instead of a PDF', bullet: true },
       { text: 'Add to a note — attach it to a new note', bullet: true },
       {
         text: 'Scans made from the Scan tab are also kept in the Scanned files library (the folder icon at the top of Home), where you can preview, rename, share, save, add to a note, or delete them any time.',
       },
       {
         text: 'You can also scan while editing a note (the Scan button above the keyboard) — that attaches the PDF straight to that note instead.',
+      },
+      {
+        text: 'The first time you scan, Jotji downloads Google’s scanning engine once — this one step needs an internet connection. It’s the scanner software only; none of your notes or scans are sent anywhere, and scanning works offline afterwards.',
       },
     ],
   },
@@ -210,6 +214,36 @@ const FAQS: Faq[] = [
       },
       {
         text: 'Notes are stored in an encrypted on-device database, and there is no analytics or tracking of any kind.',
+      },
+    ],
+  },
+  {
+    q: 'Does Jotji need an internet connection?',
+    a: [
+      {
+        text: 'No — Jotji is built to work offline. Your notes live in an encrypted database on your device, and you can write, edit, organize, and search them with no connection at all.',
+      },
+      {
+        text: 'There are only a few times Jotji uses the internet, and each is either a one-time setup or something you start yourself:',
+      },
+      {
+        text: 'The first time you use the document scanner, it downloads Google’s on-device scanning engine — a one-time download that needs a connection. It’s the scanner software only; none of your notes or scans are sent anywhere, and scanning works offline afterwards.',
+        bullet: true,
+      },
+      {
+        text: 'Sharing a note or scan to another app, or using “Summarize with AI”, sends only the item you picked, and only to the app you choose.',
+        bullet: true,
+      },
+      {
+        text: 'Importing from Evernote can optionally download images that were only linked from the web — and only if you agree.',
+        bullet: true,
+      },
+      {
+        text: 'Opening a link, like the Support page or a Play Store link, uses your browser as usual.',
+        bullet: true,
+      },
+      {
+        text: 'Jotji has no account, no cloud, and no analytics, so nothing else is ever uploaded — your notes stay on your device.',
       },
     ],
   },

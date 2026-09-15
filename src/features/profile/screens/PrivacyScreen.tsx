@@ -45,6 +45,9 @@ const POLICY: Block[] = [
   { kind: 'bullet', text: 'External links — links such as the “Support Jotji” page or a Play Store link open in your browser or the Play Store app, which have their own privacy policies.' },
   { kind: 'bullet', text: 'Backup — when you create a backup (Settings → Backup), the file is written only to the location you choose. Jotji does not upload it anywhere.' },
 
+  { kind: 'h', text: 'The document scanner' },
+  { kind: 'p', text: 'Jotji’s document scanner uses Google’s ML Kit, which runs entirely on your device. The first time you scan, the app downloads the scanning engine once from Google Play Services — a one-time download that needs an internet connection. This transfers only the scanning software to your device; none of your notes, images, or scans are uploaded, and after that first download the scanner works fully offline.' },
+
   { kind: 'h', text: 'Data sharing and selling' },
   { kind: 'p', text: 'We do not sell your data, and we do not share it with third parties. We cannot — the app never sends your data to us in the first place.' },
 
@@ -80,7 +83,7 @@ export function PrivacyScreen() {
       <StackHeader title="Privacy policy" />
       <ScrollView contentContainerStyle={[styles.content, { maxWidth: contentMaxWidth }]}>
         <AppText variant="labelMd" color="onSurfaceVariant" style={styles.updated}>
-          Last updated: 11 September 2026
+          Last updated: 15 September 2026
         </AppText>
 
         {POLICY.map((b, i) => {

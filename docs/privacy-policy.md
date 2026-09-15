@@ -1,6 +1,6 @@
 # Privacy Policy for Jotji
 
-**Last updated: 11 September 2026**
+**Last updated: 15 September 2026**
 
 Jotji ("the app", "we", "us") is a local-first note-taking app for Android. This policy
 explains what data the app handles and how your privacy is protected. In short: **Jotji has
@@ -60,6 +60,14 @@ only to the destination **you** choose. Jotji itself never receives this data.
 - **Backup** — When you create a backup (Settings → Backup), the file is written only to the
   location you choose (for example your device storage or a cloud drive you pick). Jotji does not
   upload it anywhere; where the file then lives is governed by whatever service you saved it to.
+
+## The document scanner
+
+Jotji's document scanner uses Google's ML Kit, which runs entirely on your device. The
+first time you scan, the app downloads the scanning engine once from Google Play Services —
+a one-time download that needs an internet connection. This transfers only the scanning
+software to your device; none of your notes, images, or scans are uploaded, and after that
+first download the scanner works fully offline.
 
 ## Data sharing and selling
 
