@@ -110,3 +110,38 @@ export async function savePdfToDevice(
     toast.error('Could not save the scan');
   }
 }
+
+const JPEG_MIME = 'image/jpeg';
+
+/** expo-file-system reads only file:// URIs; normalise a bare path if we get one. */
+function toFileUri(uri: string): string {
+  return uri.startsWith('file://') || uri.startsWith('content://') ? uri : `file://${uri}`;
+}
+
+/**
+ * Save the scan's page images as JPGs to a user-picked folder (SAF). One folder
+ * pick covers every page: a multi-page scan writes `<name>-1.jpg`, `<name>-2.jpg`,
+ * … while a single page writes `<name>.jpg`. Like {@link savePdfToDevice} this is
+ * a deliberate export out of the app sandbox. The page images come straight from
+ * the scanner, so this is only offered in the post-scan flow (not the library).
+ */
+export async function saveImagesToDevice(
+  uris: string[],
+  baseName = `Scan-${Date.now()}`,
+): Promise<void> {
+  if (uris.length === 0) return;
+  try {
+    const perm = await runProtected(() => SAF.requestDirectoryPermissionsAsync());
+    if (!perm.granted) return; // user dismissed the folder picker
+    const multi = uris.length > 1;
+    for (let i = 0; i < uris.length; i++) {
+      const base64 = await readAsStringAsync(toFileUri(uris[i]), { encoding: 'base64' });
+      const name = multi ? `${baseName}-${i + 1}` : baseName;
+      const destUri = await SAF.createFileAsync(perm.directoryUri, name, JPEG_MIME);
+      await SAF.writeAsStringAsync(destUri, base64, { encoding: 'base64' });
+    }
+    toast.success(multi ? `Saved ${uris.length} images to device` : 'Image saved to device');
+  } catch {
+    toast.error('Could not save the images');
+  }
+}

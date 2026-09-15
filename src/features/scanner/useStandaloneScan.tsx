@@ -18,7 +18,7 @@ import type { ScannedFile } from '@core/db/types';
 import type { RootStackParamList } from '@navigation/types';
 
 import { RenameScanSheet } from './components/RenameScanSheet';
-import { savePdfToDevice, sharePdf } from './scanActions';
+import { saveImagesToDevice, savePdfToDevice, sharePdf } from './scanActions';
 import { scanDocument } from './scanDocument';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
@@ -30,6 +30,9 @@ export function useStandaloneScan(): { startScan: () => void; scanSheet: React.R
   // Two-step flow: name the scan first, then choose an action.
   const [pendingScan, setPendingScan] = useState<ScannedFile | null>(null);
   const [scanFile, setScanFile] = useState<ScannedFile | null>(null);
+  // The raw JPEG pages for this capture, kept so the action sheet can offer
+  // "save as JPG". Cache-lived, so only valid for the current post-scan flow.
+  const [pageImages, setPageImages] = useState<string[]>([]);
 
   const startScan = useCallback(async () => {
     const scan = await scanDocument();
@@ -38,6 +41,7 @@ export function useStandaloneScan(): { startScan: () => void; scanSheet: React.R
       // Every standalone scan is auto-kept in the device-local scan library;
       // naming + the post-scan actions then operate on the saved copy.
       const saved = await scannedFilesRepo.addScannedFile(scan.pdfUri);
+      setPageImages(scan.pageImages);
       setPendingScan(saved);
     } catch {
       toast.error('Could not save the scan');
@@ -71,6 +75,7 @@ export function useStandaloneScan(): { startScan: () => void; scanSheet: React.R
         filename={pendingScan?.filename ?? ''}
         title="Name your scan"
         submitLabel="Continue"
+        currentLabel="Default name"
         onClose={() => {
           // Dismissing keeps the default name — the scan is never lost.
           if (pendingScan) openActions(pendingScan);
@@ -96,9 +101,18 @@ export function useStandaloneScan(): { startScan: () => void; scanSheet: React.R
                 },
                 {
                   icon: 'download',
-                  label: 'Save to device',
+                  label: 'Save as PDF',
                   onPress: () => savePdfToDevice(scanFile.localUri, baseName(scanFile.filename)),
                 },
+                ...(pageImages.length > 0
+                  ? [
+                      {
+                        icon: 'image' as const,
+                        label: pageImages.length > 1 ? 'Save as images (JPG)' : 'Save as image (JPG)',
+                        onPress: () => saveImagesToDevice(pageImages, baseName(scanFile.filename)),
+                      },
+                    ]
+                  : []),
                 { icon: 'file-plus', label: 'Attach to a note', onPress: () => attachToNote(scanFile.localUri) },
               ]
             : []

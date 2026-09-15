@@ -29,8 +29,14 @@ import { createPdf } from 'react-native-images-to-pdf';
 import { runProtected } from '@core/security/appLockController';
 import { newId } from '@core/utils/ids';
 
-/** Lib-agnostic result: a single multi-page PDF in the app cache. */
-export type ScanResult = { pdfUri: string; mime: 'application/pdf' };
+/**
+ * Lib-agnostic result: a single multi-page PDF in the app cache, plus the raw
+ * JPEG page images the scanner produced (one per page, in the cache). The PDF is
+ * the primary artifact everything downstream consumes; `pageImages` lets the
+ * post-scan flow offer "save as JPG" without re-rendering the PDF. The images are
+ * cache-lived — only reliable in the moment right after a scan.
+ */
+export type ScanResult = { pdfUri: string; mime: 'application/pdf'; pageImages: string[] };
 
 /**
  * Launch the OS document scanner and return one multi-page PDF, or `null` if
@@ -57,6 +63,10 @@ export async function scanDocument(): Promise<ScanResult | null> {
     // NB: createPdf resolves with a scheme-stripped path (Uri.getPath()); the rest
     // of the pipeline (expo-file-system File) needs a file:// URI, so return the
     // URI of the file we created rather than createPdf's return value.
-    return { pdfUri: out.uri, mime: 'application/pdf' };
+    return {
+      pdfUri: out.uri,
+      mime: 'application/pdf',
+      pageImages: pages.map((img) => img.uri),
+    };
   });
 }
