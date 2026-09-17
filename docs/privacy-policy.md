@@ -6,6 +6,10 @@ Jotji ("the app", "we", "us") is a local-first note-taking app for Android. This
 explains what data the app handles and how your privacy is protected. In short: **Jotji has
 no account, no cloud, and no analytics — your notes stay on your device.**
 
+Jotji is also **open source**. Anyone can inspect the full source code to verify exactly how
+the app handles your data — it is published at
+[github.com/surazen/Jotji](https://github.com/surazen/Jotji) under the GPL-3.0 license.
+
 ## The short version
 
 - We do **not** collect, transmit, or store any of your personal data on our servers. We have

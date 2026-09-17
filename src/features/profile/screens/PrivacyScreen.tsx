@@ -23,6 +23,7 @@ type Block =
 
 const POLICY: Block[] = [
   { kind: 'p', text: 'Jotji (“the app”, “we”, “us”) is a local-first note-taking app for Android. This policy explains what data the app handles and how your privacy is protected. In short: Jotji has no account, no cloud, and no analytics — your notes stay on your device.' },
+  { kind: 'p', text: 'Jotji is also open source. Anyone can inspect the full source code to verify exactly how the app handles your data — it is published at github.com/surazen/Jotji under the GPL-3.0 license.' },
 
   { kind: 'h', text: 'The short version' },
   { kind: 'bullet', text: 'We do not collect, transmit, or store any of your personal data on our servers. We have no servers.' },
