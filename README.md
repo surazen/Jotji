@@ -9,7 +9,7 @@ yourself.
 
 - **License:** [GPL-3.0-or-later](LICENSE)
 - **Platform:** Android (phones + tablets)
-- **Privacy policy:** https://jotji.com/privacy
+- **Privacy policy:** https://jotji.com/privacy.html
 
 ## Features
 
@@ -33,7 +33,7 @@ yourself.
 Jotji is built so that it *can't* see your data — there are no servers and no accounts.
 Everything is stored locally in an encrypted database, and the only network activity is a
 handful of clearly user-initiated or one-time actions (see the
-[privacy policy](https://jotji.com/privacy)). For the threat model, data handling, and how
+[privacy policy](https://jotji.com/privacy.html)). For the threat model, data handling, and how
 to report a vulnerability, see [SECURITY.md](SECURITY.md).
 
 Highlights of the security design:
