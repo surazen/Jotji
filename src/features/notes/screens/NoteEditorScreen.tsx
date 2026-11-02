@@ -1,6 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, TextInput, View } from 'react-native';
-import { KeyboardController, KeyboardStickyView } from 'react-native-keyboard-controller';
+import Animated, { useAnimatedStyle } from 'react-native-reanimated';
+import {
+  KeyboardAvoidingView,
+  KeyboardController,
+  useReanimatedKeyboardAnimation,
+} from 'react-native-keyboard-controller';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import {
   CoreBridge,
   DEFAULT_TOOLBAR_ITEMS,
@@ -149,6 +155,15 @@ function EditorBody({
 }: EditorBodyProps) {
   const theme = useTheme();
   const navigation = useNavigation<Nav>();
+
+  // The Screen omits the bottom edge (edge-to-edge), so with the keyboard closed
+  // the bottom bars would sit under the system navigation bar. Pad them by the
+  // nav-bar inset, fading to 0 as the keyboard opens (it covers that strip).
+  const insets = useSafeAreaInsets();
+  const { progress: keyboardProgress } = useReanimatedKeyboardAnimation();
+  const bottomBarsInsetStyle = useAnimatedStyle(() => ({
+    paddingBottom: insets.bottom * (1 - keyboardProgress.value),
+  }));
 
   const [title, setTitle] = useState(initialTitle);
   const [tags, setTags] = useState<Tag[]>(initialTags);
@@ -363,7 +378,15 @@ function EditorBody({
         }
       />
 
-      <View style={styles.flex}>
+      {/* Shrink the whole column by the keyboard height (keyboard-controller's
+          KeyboardAvoidingView works under Android edge-to-edge, unlike RN's).
+          The editor WebView must actually resize — if it only gets covered
+          (e.g. by a translated KeyboardStickyView), TipTap thinks the caret is
+          still on screen, never scrolls, and typing continues out of sight.
+          automaticOffset measures the view's on-screen position; without it the
+          overlap is computed from the parent-relative layout and comes up short
+          by the Screen's status-bar inset, hiding the formatting toolbar. */}
+      <KeyboardAvoidingView behavior="padding" automaticOffset style={styles.flex}>
         <TextInput
           value={title}
           onChangeText={setTitle}
@@ -418,12 +441,12 @@ function EditorBody({
           <RichTextEditor editor={editor} />
         </View>
 
-        {/* Pin the attachment tray + action + formatting bars directly above the
-            keyboard. RN's KeyboardAvoidingView doesn't work under Android
-            edge-to-edge, so they were buried by the keyboard; KeyboardStickyView
-            tracks it. The tray lives inside the sticky group so the bars never
-            overlap (and clip) the thumbnails. */}
-        <KeyboardStickyView style={{ backgroundColor: theme.colors.surfaceContainerLow }}>
+        {/* Attachment tray + action + formatting bars, laid out below the editor
+            and so directly above the keyboard. The tray lives in the same group
+            so the bars never overlap (and clip) the thumbnails. */}
+        <Animated.View
+          style={[{ backgroundColor: theme.colors.surfaceContainerLow }, bottomBarsInsetStyle]}
+        >
           <AttachmentStrip attachments={attachments} onRemove={removeAttachment} />
           <View style={[styles.bottomBar, { backgroundColor: theme.colors.surfaceContainerLow }]}>
             <AttachmentBar
@@ -444,10 +467,10 @@ function EditorBody({
           </View>
 
           {/* Always visible while the note is open (both bars persist regardless
-              of keyboard/focus); KeyboardStickyView keeps them above the keyboard. */}
+              of keyboard/focus); the KeyboardAvoidingView keeps them above the keyboard. */}
           <Toolbar editor={editor} hidden={false} items={EDITOR_TOOLBAR_ITEMS} />
-        </KeyboardStickyView>
-      </View>
+        </Animated.View>
+      </KeyboardAvoidingView>
 
       <BottomSheet visible={tagSheetOpen} onClose={() => setTagSheetOpen(false)} title="Tags">
         <TagInput tags={tags} onAdd={addTag} onRemove={removeTag} />
