@@ -165,6 +165,9 @@ function EditorBody({
     paddingBottom: insets.bottom * (1 - keyboardProgress.value),
   }));
 
+  // 3 title lines + styles.title's vertical padding (8 + 4).
+  const titleMaxHeight = 3 * (theme.text.headlineSm.lineHeight ?? 30) + 12;
+
   const [title, setTitle] = useState(initialTitle);
   const [tags, setTags] = useState<Tag[]>(initialTags);
   const [attachments, setAttachments] = useState<Attachment[]>(initialAttachments);
@@ -387,14 +390,24 @@ function EditorBody({
           overlap is computed from the parent-relative layout and comes up short
           by the Screen's status-bar inset, hiding the formatting toolbar. */}
       <KeyboardAvoidingView behavior="padding" automaticOffset style={styles.flex}>
+        {/* Multiline so long titles wrap, but capped at 3 lines so it scrolls
+            internally instead of pushing the body and toolbars off screen.
+            Enter jumps to the body rather than adding a line break. */}
         <TextInput
           value={title}
           onChangeText={setTitle}
           placeholder="Title"
           placeholderTextColor={theme.colors.onSurfaceVariant}
           selectionColor={theme.colors.primary}
-          style={[theme.text.headlineSm, styles.title, { color: theme.colors.onSurface }]}
+          style={[
+            theme.text.headlineSm,
+            styles.title,
+            { color: theme.colors.onSurface, maxHeight: titleMaxHeight },
+          ]}
           multiline
+          submitBehavior="submit"
+          returnKeyType="next"
+          onSubmitEditing={() => editor.focus('start')}
         />
 
         <View style={styles.notebookRow}>
