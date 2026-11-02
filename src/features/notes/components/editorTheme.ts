@@ -12,7 +12,11 @@ export function buildEditorCss(theme: Theme): string {
   const fontSize = theme.text.bodyLg.fontSize ?? 16;
   return `
     * { background-color: ${c.surface}; color: ${c.onSurface}; }
-    body { caret-color: ${c.primary}; font-size: ${fontSize}px; line-height: 1.5; padding: 6px 10px; }
+    body { caret-color: ${c.primary}; font-size: ${fontSize}px; line-height: 1.5; }
+    /* TenTap's scroll container is position:absolute; width:100%. Padding on
+       body shifts it right without narrowing it, clipping line ends — so pad
+       the container itself (border-box keeps it within the viewport). */
+    #root > div:nth-of-type(1) { box-sizing: border-box; padding: 6px 10px; }
     p { margin: 0 0 0.6em; }
     a { color: ${c.primary}; }
     ::selection { background: ${c.primaryContainer}; color: ${c.onPrimaryContainer}; }
