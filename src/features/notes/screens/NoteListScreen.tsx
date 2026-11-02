@@ -105,9 +105,13 @@ export function NoteListScreen() {
             <Icon name="search" size={24} color="onSurface" />
           </Pressable>
         </View>
+        {/* FlashList v2 anchors the visible item by default (chat-style), so a
+            note edited/created elsewhere lands ABOVE the viewport when it sorts
+            to the top on refocus. A recency-sorted list must start at the top. */}
         <FlashList
           data={notes}
           keyExtractor={(item) => item.id}
+          maintainVisibleContentPosition={{ disabled: true }}
           contentContainerStyle={styles.listContent}
           ListHeaderComponent={
             <ListHeader

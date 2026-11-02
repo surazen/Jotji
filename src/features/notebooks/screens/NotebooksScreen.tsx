@@ -98,6 +98,9 @@ export function NotebooksScreen() {
           data={data}
           numColumns={gridColumns}
           keyExtractor={(item) => item.id}
+          // Don't anchor the visible item (FlashList v2 default) when the list
+          // changes on refocus — keep it starting from the top.
+          maintainVisibleContentPosition={{ disabled: true }}
           contentContainerStyle={styles.list}
           renderItem={({ item }) => {
             const isGeneral = item.id === GENERAL_ID;

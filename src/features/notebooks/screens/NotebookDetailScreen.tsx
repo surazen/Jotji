@@ -116,6 +116,9 @@ export function NotebookDetailScreen() {
         <FlashList
           data={displayed}
           keyExtractor={(item) => item.id}
+          // Don't anchor the visible item (FlashList v2 default): an edited note
+          // sorts to the top and must not land above the viewport.
+          maintainVisibleContentPosition={{ disabled: true }}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.list}
           ListEmptyComponent={
